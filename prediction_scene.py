@@ -11,7 +11,7 @@ from keras import backend as K
 from keras.models import model_from_json
 from keras.wrappers.scikit_learn import KerasClassifier
 
-import sys, os, getopt
+import sys, os, argparse
 import json
 
 from modules.utils import config as cfg
@@ -19,33 +19,20 @@ from modules.utils import config as cfg
 output_model_folder = cfg.saved_models_folder
 
 def main():
-
-    # TODO : use of argparse
     
-    if len(sys.argv) <= 1:
-        print('Run with default parameters...')
-        print('python prediction_scene.py --data xxxx.csv --model xxxx.joblib --output xxxx --scene xxxx')
-        sys.exit(2)
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hd:o:s", ["help=", "data=", "model=", "output=", "scene="])
-    except getopt.GetoptError:
-        # print help information and exit:
-        print('python prediction_scene.py --data xxxx.csv --model xxxx.joblib --output xxxx --scene xxxx')
-        sys.exit(2)
-    for o, a in opts:
-        if o == "-h":
-            print('python prediction_scene.py --data xxxx.csv --model xxxx.joblib --output xxxx --scene xxxx')
-            sys.exit()
-        elif o in ("-d", "--data"):
-            p_data_file = a
-        elif o in ("-m", "--model"):
-            p_model_file = a
-        elif o in ("-o", "--output"):
-            p_output = a
-        elif o in ("-s", "--scene"):
-            p_scene = a
-        else:
-            assert False, "unhandled option"
+    parser = argparse.ArgumentParser(description="Give model performance on specific scene")
+
+    parser.add_argument('--data', type=str, help='dataset filename prefix of specific scene (without .train and .test)')
+    parser.add_argument('--model', type=str, help='saved model (Keras or SKlearn) filename with extension')
+    parser.add_argument('--output', type=str, help="filename to store predicted and performance model obtained on scene")
+    parser.add_argument('--scene', type=str, help="scene indice to predict", choices=cfg.scenes_indices)
+
+    args = parser.parse_args()
+
+    p_data_file  = args.data
+    p_model_file = args.model
+    p_output     = args.output
+    p_scene      = args.scene
 
     if '.joblib' in p_model_file:
         kind_model = 'sklearn'

@@ -7,7 +7,7 @@ Created on Fri Sep 14 21:02:42 2018
 """
 
 from __future__ import print_function
-import sys, os, getopt
+import sys, os, argparse
 import numpy as np
 import random
 import time
@@ -180,33 +180,15 @@ def generate_data_svd(data_type, mode):
 
 def main():
 
-    # default value of p_step
-    p_step = 1
+    parser = argparse.ArgumentParser(description="Compute and prepare data of metric of all scenes (keep in memory min and max value found)")
 
-    # TODO : use of argparse
-    if len(sys.argv) <= 1:
-        print('Run with default parameters...')
-        print('python generate_all_data.py --metric all')
-        print('python generate_all_data.py --metric lab')
-        print('python generate_all_data.py --metric lab')
-        sys.exit(2)
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hms", ["help=", "metric="])
-    except getopt.GetoptError:
-        # print help information and exit:
-        print('python generate_all_data.py --metric all')
-        sys.exit(2)
-    for o, a in opts:
-        if o == "-h":
-            print('python generate_all_data.py --metric all')
-            sys.exit()
-        elif o in ("-m", "--metric"):
-            p_metric = a
+    parser.add_argument('--metric', type=str, 
+                                    help="metric choice in order to compute data (use 'all' if all metrics are needed)", 
+                                    choices=metric_choices)
 
-            if p_metric != 'all' and p_metric not in metric_choices:
-                assert False, "Invalid metric choice"
-        else:
-            assert False, "unhandled option"
+    args = parser.parse_args()
+
+    p_metric = args.metric
 
     # generate all or specific metric data
     if p_metric == 'all':

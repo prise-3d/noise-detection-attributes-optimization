@@ -11,7 +11,7 @@ from sklearn.model_selection import cross_val_score
 
 import numpy as np
 import pandas as pd
-import sys, os, getopt
+import sys, os, argparse
 
 from modules.utils import config as cfg
 from modules import models as mdl
@@ -25,33 +25,17 @@ output_model_folder = os.path.join(current_dirpath, saved_models_folder)
 
 def main():
 
-    # TODO : use argparse
-    
-    if len(sys.argv) <= 2:
-        print('python train_model.py --data xxxx --output xxxx --choice svm_model')
-        sys.exit(2)
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hd:o:c", ["help=", "data=", "output=", "choice="])
-    except getopt.GetoptError:
-        # print help information and exit:
-        print('python train_model.py --data xxxx --output xxxx --choice svm_model')
-        sys.exit(2)
-    for o, a in opts:
-        if o == "-h":
-            print('python train_model.py --data xxxx --output xxxx --choice svm_model')
-            sys.exit()
-        elif o in ("-d", "--data"):
-            p_data_file = a
-        elif o in ("-o", "--output"):
-            p_output = a
-        elif o in ("-c", "--choice"):
-            p_choice = a
+    parser = argparse.ArgumentParser(description="Train SKLearn model and save it into .joblib file")
 
-            if not p_choice in models_list:
-                assert False, "Unknown model choice"
+    parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)')
+    parser.add_argument('--output', type=str, help='output file name desired for model (without .joblib extension)')
+    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list)
 
-        else:
-            assert False, "unhandled option"
+    args = parser.parse_args()
+
+    p_data_file = args.data
+    p_output    = args.output
+    p_choice    = args.choice
 
     if not os.path.exists(output_model_folder):
         os.makedirs(output_model_folder)
@@ -131,7 +115,6 @@ def main():
     val_f1 = f1_score(y_val, y_val_model)
     test_f1 = f1_score(y_test, y_test_model)
 
-
     ###################
     # 5. Output : Print and write all information in csv
     ###################
@@ -142,7 +125,6 @@ def main():
     print("Test dataset size ", test_set_size)
     print("Test: ", val_accuracy)
     print("Test F1: ", test_f1)
-
 
     ##################
     # 6. Save model : create path if not exists
