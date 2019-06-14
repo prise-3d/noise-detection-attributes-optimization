@@ -5,7 +5,7 @@ import numpy as np
 from ipfml import processing
 from PIL import Image
 
-import sys, os, getopt
+import sys, os, argparse
 import subprocess
 import time
 
@@ -21,6 +21,8 @@ threshold_map_file_prefix = cfg.threshold_map_folder + "_"
 
 zones                     = cfg.zones_indices
 maxwell_scenes            = cfg.maxwell_scenes_names
+normalization_choices     = cfg.normalization_choices
+metric_choices            = cfg.metric_choices_labels
 
 simulation_curves_zones   = "simulation_curves_zones_"
 tmp_filename              = '/tmp/__model__img_to_predict.png'
@@ -31,44 +33,26 @@ current_dirpath = os.getcwd()
 def main():
 
     p_custom = False
+        
+    parser = argparse.ArgumentParser(description="Script which predicts threshold using specific model")
 
-    # TODO : use of argparse
-    
-    if len(sys.argv) <= 1:
-        print('Run with default parameters...')
-        print('python predict_seuil_expe_maxwell_curve.py --interval "0,20" --model path/to/xxxx.joblib --mode svdn --metric lab --limit_detection xx --custom min_max_filename')
-        sys.exit(2)
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:m:o:l:c", ["help=", "interval=", "model=", "mode=", "metric=", "limit_detection=", "custom="])
-    except getopt.GetoptError:
-        # print help information and exit:
-        print('python predict_seuil_expe_maxwell_curve.py --interval "xx,xx" --model path/to/xxxx.joblib --mode svdn --metric lab --limit_detection xx --custom min_max_filename')
-        sys.exit(2)
-    for o, a in opts:
-        if o == "-h":
-            print('python predict_seuil_expe_maxwell_curve.py --interval "xx,xx" --model path/to/xxxx.joblib --mode svdn --metric lab --limit_detection xx --custom min_max_filename')
-            sys.exit()
-        elif o in ("-t", "--interval"):
-            p_interval = a
-        elif o in ("-m", "--model"):
-            p_model_file = a
-        elif o in ("-o", "--mode"):
-            p_mode = a
+    parser.add_argument('--interval', type=str, help='Interval value to keep from svd', default='"0, 200"')
+    parser.add_argument('--model', type=str, help='.joblib or .json file (sklearn or keras model)')
+    parser.add_argument('--mode', type=str, help='Kind of normalization level wished', choices=normalization_choices)
+    parser.add_argument('--metric', type=str, help='Metric data choice', choices=metric_choices)
+    #parser.add_argument('--limit_detection', type=int, help='Specify number of same prediction to stop threshold prediction', default=2)
+    parser.add_argument('--custom', type=str, help='Name of custom min max file if use of renormalization of data', default=False)
 
-            if p_mode != 'svdn' and p_mode != 'svdne' and p_mode != 'svd':
-                assert False, "Mode not recognized"
+    args = parser.parse_args()
 
-        elif o in ("-m", "--metric"):
-            p_metric = a
-        elif o in ("-l", "--limit_detection"):
-            p_limit = int(a)
-        elif o in ("-c", "--custom"):
-            p_custom = a
-        else:
-            assert False, "unhandled option"
+    p_interval   = list(map(int, args.interval.split(',')))
+    p_model_file = args.model
+    p_mode       = args.mode
+    p_metric     = args.metric
+    #p_limit      = args.limit
+    p_custom     = args.custom
 
     scenes = os.listdir(scenes_path)
-
     scenes = [s for s in scenes if s in maxwell_scenes]
 
     print(scenes)

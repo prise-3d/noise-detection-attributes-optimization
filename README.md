@@ -4,7 +4,11 @@
 
 Noise detection on synthesis images with 26 attributes obtained using few filters. 
 
-TODO : list filters used
+Filters list:
+- wiener
+- median
+- gaussian
+- wavelet
 
 ## Requirements
 
