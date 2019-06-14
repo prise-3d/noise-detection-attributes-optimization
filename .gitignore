@@ -1,0 +1,25 @@
+# project data
+data/*
+saved_models/*
+threshold_map/*
+models_info/*
+custom_norm/*
+learned_zones/*
+corr_indices/*
+.ipynb_checkpoints
+
+# simulate_models.csv
+
+fichiersSVD_light
+
+.python-version
+__pycache__
+
+# by default avoid model files and png files
+saved_models/*.h5
+*.png
+!saved_models/*.png
+.vscode
+
+# simulate models .csv file
+simulate_models*.csv
