@@ -10,7 +10,7 @@ corr_indices/*
 
 # simulate_models.csv
 
-fichiersSVD_light
+dataset
 
 .python-version
 __pycache__

@@ -1,12 +1,22 @@
-import cv2
+import cv2, pywt
 import numpy as np
 from scipy.signal import medfilt2d, wiener, cwt
 
+def w2d(arr, mode='haar', level=1):
+    #convert to float   
+    imArray = arr
+    imArray /= 255
 
-def get_filters(arr):
+    # compute coefficients 
+    coeffs=pywt.wavedec2(imArray, mode, level=level)
 
-    filters = []
+    #Process Coefficients
+    coeffs_H=list(coeffs)  
+    coeffs_H[0] *= 0
 
-    # TODO : get all needed filters and append to filters array
-    
-    return filters 
+    # reconstruction
+    imArray_H = pywt.waverec2(coeffs_H, mode);
+    imArray_H *= 255
+    imArray_H = np.uint8(imArray_H)
+
+    return imArray_H
