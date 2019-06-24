@@ -5,6 +5,7 @@
 Noise detection on synthesis images with 26 attributes obtained using few filters. 
 
 Filters list:
+- average
 - wiener
 - median
 - gaussian
@@ -27,7 +28,7 @@ python generate_all_data.py --metric all
 ### Multiple directories and scripts are available:
 
 
-- **fichiersSVD_light/\***: all scene files information (zones of each scene, SVD descriptor files information and so on...).
+- **dataset/\***: all scene files information (zones of each scene, SVD descriptor files information and so on...).
 - **train_model.py**: script which is used to run specific model available.
 - **data/\***: folder which will contain all *.train* & *.test* files in order to train model.
 - **saved_models/*.joblib**: all scikit learn models saved.
@@ -57,7 +58,7 @@ Parameters explained:
 This is an example of how to train a model
 
 ```bash
-python train_model.py --data 'data/xxxxx.train' --output 'model_file_to_save' --choice 'model_choice'
+python train_model.py --data 'data/xxxx' --output 'model_file_to_save' --choice 'model_choice'
 ```
 
 Expected values for the **choice** parameter are ['svm_model', 'ensemble_model', 'ensemble_model_v2'].
