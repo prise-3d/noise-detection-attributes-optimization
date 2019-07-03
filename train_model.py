@@ -1,3 +1,9 @@
+# main imports
+import numpy as np
+import pandas as pd
+import sys, os, argparse
+
+# models imports
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
@@ -9,17 +15,17 @@ from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import cross_val_score
 
-import numpy as np
-import pandas as pd
-import sys, os, argparse
+# modules and config imports
+sys.path.insert(0, '') # trick to enable import of main folder module
 
-from modules.utils import config as cfg
-from modules import models as mdl
+import custom_config as cfg
+import models as mdl
 
+# variables and parameters
 saved_models_folder = cfg.saved_models_folder
 models_list         = cfg.models_names_list
 
-current_dirpath = os.getcwd()
+current_dirpath     = os.getcwd()
 output_model_folder = os.path.join(current_dirpath, saved_models_folder)
 
 

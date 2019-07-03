@@ -9,3 +9,4 @@ pydot
 matplotlib
 path.py
 pandas
+opencv-python

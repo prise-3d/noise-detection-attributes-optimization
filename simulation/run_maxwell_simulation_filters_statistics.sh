@@ -27,12 +27,12 @@ for nb_zones in {4,6,8,10,12}; do
                 echo "${MODEL_NAME} results already generated..."
             else
                 # Use of already generated model
-                # python generate_data_model_random.py --output ${FILENAME} --interval "0,${size}" --kind ${mode} --metric ${metric} --scenes "${scenes}" --nb_zones "${nb_zones}" --percent 1 --renderer "maxwell" --step 40 --random 1 --custom ${CUSTOM_MIN_MAX_FILENAME}
+                # python generate/generate_data_model_random.py --output ${FILENAME} --interval "0,${size}" --kind ${mode} --metric ${metric} --scenes "${scenes}" --nb_zones "${nb_zones}" --percent 1 --renderer "maxwell" --step 40 --random 1 --custom ${CUSTOM_MIN_MAX_FILENAME}
                 # python train_model.py --data ${FILENAME} --output ${MODEL_NAME} --choice ${model}
 
-                python predict_seuil_expe_maxwell_curve.py --interval "0,${size}" --model "saved_models/${MODEL_NAME}.joblib" --mode "${mode}" --metric ${metric} --custom ${CUSTOM_MIN_MAX_FILENAME}
+                python prediction/predict_seuil_expe_maxwell_curve.py --interval "0,${size}" --model "saved_models/${MODEL_NAME}.joblib" --mode "${mode}" --metric ${metric} --custom ${CUSTOM_MIN_MAX_FILENAME}
 
-                python save_model_result_in_md_maxwell.py --interval "0,${size}" --model "saved_models/${MODEL_NAME}.joblib" --mode "${mode}" --metric ${metric}
+                python others/save_model_result_in_md_maxwell.py --interval "0,${size}" --model "saved_models/${MODEL_NAME}.joblib" --mode "${mode}" --metric ${metric}
             fi
         done
     done
