@@ -1,7 +1,7 @@
 #! bin/bash
 
-# erase "models_info/models_comparisons.csv" file and write new header
-file_path='models_info/models_comparisons.csv'
+# erase "results/models_comparisons.csv" file and write new header
+file_path='results/models_comparisons.csv'
 
 erased=$1
 
@@ -19,6 +19,6 @@ fi
 for size in {"4","8","16","26","32","40"}; do
 
     for metric in {"lab","mscn","low_bits_2","low_bits_3","low_bits_4","low_bits_5","low_bits_6","low_bits_4_shifted_2","ica_diff","svd_trunc_diff","ipca_diff","svd_reconstruct"}; do
-        bash generateAndTrain_maxwell_custom_split.sh ${size} ${metric}
+        bash data_processing/generateAndTrain_maxwell_custom_split.sh ${size} ${metric}
     done
 done
