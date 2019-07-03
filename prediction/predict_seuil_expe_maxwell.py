@@ -1,18 +1,24 @@
-from sklearn.externals import joblib
-
-import numpy as np
-
-from ipfml import processing
-from PIL import Image
-
+# main imports
 import sys, os, argparse
 import subprocess
 import time
+import numpy as np
+
+# image processing imports
+from ipfml.processing import segmentation
+from PIL import Image
+
+# models imports
+from sklearn.externals import joblib
+
+# modules imports
+sys.path.insert(0, '') # trick to enable import of main folder module
+
+import custom_config as cfg
+from modules.utils import data as dt
 
 
-from modules.utils import config as cfg
-
-config_filename           = cfg.config_filename
+# variables and parameters
 scenes_path               = cfg.dataset_path
 min_max_filename          = cfg.min_max_filename_extension
 threshold_expe_filename   = cfg.seuil_expe_filename
@@ -23,7 +29,7 @@ threshold_map_file_prefix = cfg.threshold_map_folder + "_"
 zones                     = cfg.zones_indices
 maxwell_scenes            = cfg.maxwell_scenes_names
 normalization_choices     = cfg.normalization_choices
-metric_choices            = cfg.metric_choices_labels
+features_choices          = cfg.features_choices_labels
 
 tmp_filename              = '/tmp/__model__img_to_predict.png'
 
@@ -39,8 +45,8 @@ def main():
     parser.add_argument('--interval', type=str, help='Interval value to keep from svd', default='"0, 200"')
     parser.add_argument('--model', type=str, help='.joblib or .json file (sklearn or keras model)')
     parser.add_argument('--mode', type=str, help='Kind of normalization level wished', choices=normalization_choices)
-    parser.add_argument('--metric', type=str, help='Metric data choice', choices=metric_choices)
-    #parser.add_argument('--limit_detection', type=int, help='Specify number of same prediction to stop threshold prediction', default=2)
+    parser.add_argument('--feature', type=str, help='Feature data choice', choices=features_choices)
+    parser.add_argument('--limit_detection', type=int, help='Specify number of same prediction to stop threshold prediction', default=2)
     parser.add_argument('--custom', type=str, help='Name of custom min max file if use of renormalization of data', default=False)
 
     args = parser.parse_args()
@@ -48,8 +54,8 @@ def main():
     p_interval   = list(map(int, args.interval.split(',')))
     p_model_file = args.model
     p_mode       = args.mode
-    p_metric     = args.metric
-    #p_limit      = args.limit
+    p_feature    = args.feature
+    p_limit      = args.limit
     p_custom     = args.custom
 
     scenes = os.listdir(scenes_path)
@@ -65,19 +71,17 @@ def main():
 
             scene_path = os.path.join(scenes_path, folder_scene)
 
-            config_path = os.path.join(scene_path, config_filename)
-
-            with open(config_path, "r") as config_file:
-                last_image_name = config_file.readline().strip()
-                prefix_image_name = config_file.readline().strip()
-                start_index_image = config_file.readline().strip()
-                end_index_image = config_file.readline().strip()
-                step_counter = int(config_file.readline().strip())
-
             threshold_expes = []
             threshold_expes_detected = []
             threshold_expes_counter = []
             threshold_expes_found = []
+
+            # get all images of folder
+            scene_images = sorted([os.path.join(scene_path, img) for img in os.listdir(scene_path) if cfg.scene_image_extension in img])
+
+            start_quality_image = dt.get_scene_image_quality(scene_images[0])
+            end_quality_image   = dt.get_scene_image_quality(scene_images[-1])
+    
 
             # get zones list info
             for index in zones:
@@ -95,28 +99,22 @@ def main():
                     # Initialize default data to get detected model threshold found
                     threshold_expes_detected.append(False)
                     threshold_expes_counter.append(0)
-                    threshold_expes_found.append(int(end_index_image)) # by default use max
+                    threshold_expes_found.append(end_quality_image) # by default use max
 
-            current_counter_index = int(start_index_image)
-            end_counter_index = int(end_index_image)
-
-            print(current_counter_index)
             check_all_done = False
 
-            while(current_counter_index <= end_counter_index and not check_all_done):
-
-                current_counter_index_str = str(current_counter_index)
-
-                while len(start_index_image) > len(current_counter_index_str):
-                    current_counter_index_str = "0" + current_counter_index_str
-
-                img_path = os.path.join(scene_path, prefix_image_name + current_counter_index_str + ".png")
+            # for each images
+            for img_path in scene_images:
 
                 current_img = Image.open(img_path)
-                img_blocks = processing.divide_in_blocks(current_img, (200, 200))
+                current_postfix_image = dt.get_scene_image_postfix(img_path)
 
+                img_blocks = segmentation.divide_in_blocks(current_img, (200, 200))
 
                 check_all_done = all(d == True for d in threshold_expes_detected)
+
+                if check_all_done:
+                    break
 
                 for id_block, block in enumerate(img_blocks):
 
@@ -126,11 +124,11 @@ def main():
                         tmp_file_path = tmp_filename.replace('__model__',  p_model_file.split('/')[-1].replace('.joblib', '_'))
                         block.save(tmp_file_path)
 
-                        python_cmd = "python predict_noisy_image_svd.py --image " + tmp_file_path + \
+                        python_cmd = "python prediction/predict_noisy_image_svd.py --image " + tmp_file_path + \
                                         " --interval '" + p_interval + \
                                         "' --model " + p_model_file  + \
                                         " --mode " + p_mode + \
-                                        " --metric " + p_metric
+                                        " --feature " + p_feature
 
                         # specify use of custom file for min max normalization
                         if p_custom:
@@ -153,11 +151,10 @@ def main():
 
                         if threshold_expes_counter[id_block] == p_limit:
                             threshold_expes_detected[id_block] = True
-                            threshold_expes_found[id_block] = current_counter_index
+                            threshold_expes_found[id_block] = int(current_postfix_image)
 
-                        print(str(id_block) + " : " + str(current_counter_index) + "/" + str(threshold_expes[id_block]) + " => " + str(prediction))
+                        print(str(id_block) + " : " + current_postfix_image + "/" + str(threshold_expes[id_block]) + " => " + str(prediction))
 
-                current_counter_index += step_counter
                 print("------------------------")
                 print("Scene " + str(id_scene + 1) + "/" + str(len(maxwell_scenes)))
                 print("------------------------")
@@ -197,8 +194,8 @@ def main():
             avg_abs_dist = sum(abs_dist) / len(abs_dist)
 
             f_map.write('\nScene information : ')
-            f_map.write('\n- BEGIN : ' + str(start_index_image))
-            f_map.write('\n- END : ' + str(end_index_image))
+            f_map.write('\n- BEGIN : ' + str(start_quality_image))
+            f_map.write('\n- END : ' + str(end_quality_image))
 
             f_map.write('\n\nDistances information : ')
             f_map.write('\n- MIN : ' + str(min_abs_dist))

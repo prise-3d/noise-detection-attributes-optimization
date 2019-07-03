@@ -1,20 +1,25 @@
-from sklearn.externals import joblib
-
+# main imports
+import sys, os, argparse, json
 import numpy as np
 
+# models imports
+from keras.models import model_from_json
+from sklearn.externals import joblib
+
+# image processing imports
 from ipfml import processing, utils
 from PIL import Image
 
-import sys, os, argparse, json
+# modules imports
+sys.path.insert(0, '') # trick to enable import of main folder module
 
-from keras.models import model_from_json
+import custom_config as cfg
+from data_attributes import get_svd_data
 
-from modules.utils import config as cfg
-from modules.utils import data as dt
-
+# variables and parameters
 path                  = cfg.dataset_path
 min_max_ext           = cfg.min_max_filename_extension
-metric_choices        = cfg.metric_choices_labels
+features_choices      = cfg.features_choices_labels
 normalization_choices = cfg.normalization_choices
 
 custom_min_max_folder = cfg.min_max_custom_folder
@@ -28,7 +33,7 @@ def main():
     parser.add_argument('--interval', type=str, help='Interval value to keep from svd', default='"0, 200"')
     parser.add_argument('--model', type=str, help='.joblib or .json file (sklearn or keras model)')
     parser.add_argument('--mode', type=str, help='Kind of normalization level wished', choices=normalization_choices)
-    parser.add_argument('--metric', type=str, help='Metric data choice', choices=metric_choices)
+    parser.add_argument('--feature', type=str, help='feature data choice', choices=features_choices)
     parser.add_argument('--custom', type=str, help='Name of custom min max file if use of renormalization of data', default=False)
 
     args = parser.parse_args()
@@ -37,7 +42,7 @@ def main():
     p_model_file = args.model
     p_interval   = list(map(int, args.interval.split(',')))
     p_mode       = args.mode
-    p_metric     = args.metric
+    p_feature    = args.feature
     p_custom     = args.custom
 
     if '.joblib' in p_model_file:
@@ -69,12 +74,12 @@ def main():
 
             model.compile(loss='binary_crossentropy',
                         optimizer='adam',
-                        metrics=['accuracy'])
+                        features=['accuracy'])
 
     # load image
     img = Image.open(p_img_file)
 
-    data = dt.get_svd_data(p_metric, img)
+    data = get_svd_data(p_feature, img)
 
     # get interval values
     begin, end = p_interval
@@ -109,7 +114,7 @@ def main():
         if p_mode == 'svdne':
 
             # set min_max_filename if custom use
-            min_max_file_path = path + '/' + p_metric + min_max_ext
+            min_max_file_path = path + '/' + p_feature + min_max_ext
 
             # need to read min_max_file
             file_path = os.path.join(os.path.dirname(__file__), min_max_file_path)
