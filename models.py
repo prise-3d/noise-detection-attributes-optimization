@@ -1,3 +1,4 @@
+# models imports
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
@@ -71,5 +72,3 @@ def get_trained_model(choice, X_train, y_train):
 
     if choice == 'ensemble_model_v2':
         return ensemble_model_v2(X_train, y_train)
-
-

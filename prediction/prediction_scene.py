@@ -1,8 +1,11 @@
-from sklearn.externals import joblib
-
+# main imports
+import sys, os, argparse
 import numpy as np
-
+import json
 import pandas as pd
+
+# models imports
+from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
 from keras.models import Sequential
 from keras.layers import Conv1D, MaxPooling1D
@@ -11,11 +14,12 @@ from keras import backend as K
 from keras.models import model_from_json
 from keras.wrappers.scikit_learn import KerasClassifier
 
-import sys, os, argparse
-import json
+# modules imports
+sys.path.insert(0, '') # trick to enable import of main folder module
 
-from modules.utils import config as cfg
+import custom_config as cfg
 
+# parameters and variables
 output_model_folder = cfg.saved_models_folder
 
 def main():
