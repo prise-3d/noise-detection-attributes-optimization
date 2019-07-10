@@ -53,21 +53,21 @@ def main():
 
     parser.add_argument('--interval', type=str, help='Interval value to keep from svd', default='"0, 200"')
     parser.add_argument('--model', type=str, help='.joblib or .json file (sklearn or keras model)')
-    parser.add_argument('--metric', type=str, help='Metric data choice', choices=cfg.metric_choices_labels)
+    parser.add_argument('--feature', type=str, help='feature data choice', choices=cfg.features_choices_labels)
     parser.add_argument('--mode', type=str, help='Kind of normalization level wished', choices=cfg.normalization_choices)
 
     args = parser.parse_args()
 
     p_interval   = list(map(int, args.interval.split(',')))
     p_model_file = args.model
-    p_metric     = args.metric
+    p_feature    = args.feature
     p_mode       = args.mode
 
 
     # call model and get global result in scenes
     begin, end = p_interval
 
-    bash_cmd = "bash others/testModelByScene_maxwell.sh '" + str(begin) + "' '" + str(end) + "' '" + p_model_file + "' '" + p_mode + "' '" + p_metric + "'"
+    bash_cmd = "bash others/testModelByScene_maxwell.sh '" + str(begin) + "' '" + str(end) + "' '" + p_model_file + "' '" + p_mode + "' '" + p_feature + "'"
 
     print(bash_cmd)
 
@@ -126,6 +126,10 @@ def main():
 
     # Prepare writing in .csv file into results folder
     output_final_file_path = os.path.join(cfg.results_information_folder, final_csv_model_comparisons)
+
+    if not os.path.exists(cfg.results_information_folder):
+        os.makedirs(cfg.results_information_folder)
+
     output_final_file = open(output_final_file_path, "a")
 
     print(current_model_name)
@@ -187,7 +191,7 @@ def main():
 
             model.compile(loss='binary_crossentropy',
                         optimizer='adam',
-                        metrics=['accuracy'])
+                        features=['accuracy'])
 
         # reshape all input data
         x_dataset_train = np.array(x_dataset_train).reshape(len(x_dataset_train), end, 1)
@@ -308,7 +312,7 @@ def main():
     # check if it's always the case...
     nb_zones = current_data_file_path.split('_')[7]
 
-    final_file_line = current_model_name + '; ' + str(end - begin) + '; ' + str(begin) + '; ' + str(end) + '; ' + str(nb_zones) + '; ' + p_metric + '; ' + p_mode
+    final_file_line = current_model_name + '; ' + str(end - begin) + '; ' + str(begin) + '; ' + str(end) + '; ' + str(nb_zones) + '; ' + p_feature + '; ' + p_mode
 
     for s in model_scores:
         final_file_line += '; ' + str(s)

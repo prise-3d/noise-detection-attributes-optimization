@@ -297,8 +297,7 @@ def main():
         if not os.path.exists(custom_min_max_folder):
             os.makedirs(custom_min_max_folder)
 
-        min_max_folder_path = os.path.join(os.path.dirname(__file__), custom_min_max_folder)
-        min_max_filename_path = os.path.join(min_max_folder_path, p_custom)
+        min_max_filename_path = os.path.join(custom_min_max_folder, p_custom)
 
         with open(min_max_filename_path, 'w') as f:
             f.write(str(min_value_interval) + '\n')

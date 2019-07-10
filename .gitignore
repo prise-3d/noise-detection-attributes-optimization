@@ -7,6 +7,7 @@ custom_norm
 learned_zones
 corr_indices
 metric_curves
+results
 .ipynb_checkpoints
 
 # simulate_models.csv

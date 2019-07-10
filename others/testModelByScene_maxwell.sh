@@ -31,7 +31,7 @@ fi
 if [ -z "$5" ]
   then
     echo "No fifth argument supplied"
-    echo "Need of metric : 'lab', 'mscn'"
+    echo "Need of feature : 'lab', 'mscn'"
     exit 1
 fi
 
@@ -46,12 +46,12 @@ INPUT_BEGIN=$1
 INPUT_END=$2
 INPUT_MODEL=$3
 INPUT_MODE=$4
-INPUT_METRIC=$5
+INPUT_FEATURE=$5
 
 zones="0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15"
 
 echo "**Model :** ${INPUT_MODEL}"
-echo "**Metric :** ${INPUT_METRIC}"
+echo "**feature :** ${INPUT_FEATURE}"
 echo "**Mode :** ${INPUT_MODE}"
 echo "**Vector range :** [${INPUT_BEGIN}, ${INPUT_END}]"
 echo ""
@@ -61,10 +61,10 @@ echo "---|--------|-------|----------"
 # only take maxwell scenes
 for scene in {"A","D","G","H"}; do
 
-  FILENAME="data/data_${INPUT_MODE}_${INPUT_METRIC}_B${INPUT_BEGIN}_E${INPUT_END}_scene${scene}"
+  FILENAME="data/data_${INPUT_MODE}_${INPUT_FEATURE}_B${INPUT_BEGIN}_E${INPUT_END}_scene${scene}"
 
-  python generate/generate_data_model.py --output ${FILENAME} --interval "${INPUT_BEGIN},${INPUT_END}" --kind ${INPUT_MODE} --metric ${INPUT_METRIC} --scenes "${scene}" --zones "${zones}" --percent 1
+  python generate/generate_data_model.py --output ${FILENAME} --interval "${INPUT_BEGIN},${INPUT_END}" --kind ${INPUT_MODE} --feature ${INPUT_FEATURE} --scenes "${scene}" --zones "${zones}" --percent 1
 
-  python prediction/prediction_scene.py --data "$FILENAME.train" --model ${INPUT_MODEL} --output "${INPUT_MODEL}_Scene${scene}_mode_${INPUT_MODE}_metric_${INPUT_METRIC}.prediction" --scene ${scene}
+  python prediction/prediction_scene.py --data "$FILENAME.train" --model ${INPUT_MODEL} --output "${INPUT_MODEL}_Scene${scene}_mode_${INPUT_MODE}_feature_${INPUT_FEATURE}.prediction" --scene ${scene}
 
 done
