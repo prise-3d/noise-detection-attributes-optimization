@@ -27,7 +27,6 @@ python generate/generate_all_data.py --feature all
 
 ### Multiple directories and scripts are available:
 
-
 - **dataset/\***: all scene files information (zones of each scene, SVD descriptor files information and so on...).
 - **train_model.py**: script which is used to run specific model available.
 - **data/\***: folder which will contain all *.train* & *.test* files in order to train model.
