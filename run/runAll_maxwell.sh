@@ -8,7 +8,7 @@ erased=$1
 if [ "${erased}" == "Y" ]; then
     echo "Previous data file erased..."
     rm ${file_path}
-    mkdir -p models_info
+    mkdir -p results
     touch ${file_path}
 
     # add of header
