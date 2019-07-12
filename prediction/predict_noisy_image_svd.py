@@ -14,7 +14,7 @@ from PIL import Image
 sys.path.insert(0, '') # trick to enable import of main folder module
 
 import custom_config as cfg
-from data_attributes import get_svd_data
+from data_attributes import get_image_features
 
 # variables and parameters
 path                  = cfg.dataset_path
@@ -79,7 +79,7 @@ def main():
     # load image
     img = Image.open(p_img_file)
 
-    data = get_svd_data(p_feature, img)
+    data = get_image_features(p_feature, img)
 
     # get interval values
     begin, end = p_interval

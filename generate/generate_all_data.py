@@ -16,7 +16,7 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 
 import custom_config as cfg
 from modules.utils import data as dt
-from data_attributes import get_svd_data
+from data_attributes import get_image_features
 
 
 # getting configuration information
@@ -99,7 +99,7 @@ def generate_data_svd(data_type, mode):
                 # feature computation part #
                 ###########################
 
-                data = get_svd_data(data_type, block)
+                data = get_image_features(data_type, block)
 
                 ##################
                 # Data mode part #

@@ -23,7 +23,7 @@ import custom_config as cfg
 from modules.utils import data as dt
 
 
-def get_svd_data(data_type, block):
+def get_image_features(data_type, block):
     """
     Method which returns the data type expected
     """

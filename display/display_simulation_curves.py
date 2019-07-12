@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os, sys, argparse
 
-from modules.utils.data import get_svd_data
+from modules.utils.data import get_image_features
 
 from modules.utils import config as cfg
 

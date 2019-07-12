@@ -23,32 +23,76 @@ Generate all needed data for each features (which requires the the whole dataset
 python generate/generate_all_data.py --feature all
 ```
 
-## How to use
+## Project structure
 
-### Multiple directories and scripts are available:
+### Link to your dataset
 
-- **dataset/\***: all scene files information (zones of each scene, SVD descriptor files information and so on...).
-- **train_model.py**: script which is used to run specific model available.
-- **data/\***: folder which will contain all *.train* & *.test* files in order to train model.
-- **saved_models/*.joblib**: all scikit learn models saved.
-- **models_info/***: all markdown files generated to get quick information about model performance and prediction. This folder contains also **model_comparisons.csv** obtained after running runAll_maxwell.sh script.
+You have to create a symbolic link to your own database which respects this structure:
+
+- dataset/
+  - Scene1/
+    - zone00/
+    - ...
+    - zone15/
+      - seuilExpe (file which contains threshold samples of zone image perceived by human)
+    - Scene1_00050.png
+    - Scene1_00070.png
+    - ...
+    - Scene1_01180.png
+    - Scene1_01200.png
+  - Scene2/
+    - ...
+  - ...
+
+Create your symbolic link:
+
+```
+ln -s /path/to/your/data dataset
+```
+
+### Code architecture description
+
 - **modules/\***: contains all modules usefull for the whole project (such as configuration variables)
+- **analysis/\***: contains all jupyter notebook used for analysis during thesis
+- **generate/\***: contains python scripts for generate data from scenes (described later)
+- **data_processing/\***: all python scripts for generate custom dataset for models
+- **prediction/\***: all python scripts for predict new threshold from computed models
+- **simulation/\***: contains all bash scripts used for run simulation from models
+- **display/\***: contains all python scripts used for display Scene information (such as Singular values...)
+- **run/\***: bash scripts to run few step at once : 
+  - generate custom dataset
+  - train model
+  - keep model performance
+  - run simulation (if necessary)
+- **others/\***: folders which contains others scripts such as script for getting performance of model on specific scene and write it into Mardown file.
+- **data_attributes.py**: files which contains all extracted features implementation from an image.
+- **custom_config.py**: override the main configuration project of `modules/config/global_config.py`
+- **train_model.py**: script which is used to run specific model available.
 
+### Generated data directories:
+
+- **data/\***: folder which will contain all generated *.train* & *.test* files in order to train model.
+- **saved_models/\***: all scikit learn or keras models saved.
+- **models_info/\***: all markdown files generated to get quick information about model performance and prediction.obtained after running runAll_maxwell.sh script.
+- **results/**:  This folder contains `model_comparisons.csv` file used for store models performance.
+
+
+## How to use ?
 
 **Remark**: Note here that all python script have *--help* command.
 
 ```
 python generate_data_model.py --help
-
-python generate_data_model.py --output xxxx --interval 0,20  --kind svdne --scenes "A, B, D" --zones "0, 1, 2" --percent 0.7 --sep: --rowindex 1 --custom custom_min_max_filename
 ```
 
 Parameters explained:
-- **output**: filename of data (which will be split into two parts, *.train* and *.test* relative to your choices).
+- **feature**: feature choice wished
+- **output**: filename of data (which will be split into two parts, *.train* and *.test* relative to your choices). Need to be into `data` folder.
 - **interval**: the interval of data you want to use from SVD vector.
 - **kind**: kind of data ['svd', 'svdn', 'svdne']; not normalize, normalize vector only and normalize together.
 - **scenes**: scenes choice for training dataset.
 - **zones**: zones to take for training dataset.
+- **step**: specify if all pictures are used or not using step process.
 - **percent**: percent of data amount of zone to take (choose randomly) of zone
 - **custom**: specify if you want your data normalized using interval and not the whole singular values vector. If it is, the value of this parameter is the output filename which will store the min and max value found. This file will be usefull later to make prediction with model (optional parameter).
 
@@ -78,8 +122,8 @@ The model will return only 0 or 1:
 - 0 means image seem to be not noisy.
 
 All SVD features developed need:
-- Name added into *feature_choices_labels* global array variable of **modules/utils/config.py** file.
-- A specification of how you compute the feature into *get_svd_data* method of **modules/utils/data_type.py** file.
+- Name added into *feature_choices_labels* global array variable of `custom_config.py` file.
+- A specification of how you compute the feature into *get_image_features* method of `data_attributes.py` file.
 
 ### Predict scene using model
 
@@ -101,10 +145,6 @@ Just use --help option to get more information.
 All scripts named **prediction/predict_seuil_expe\*.py** are used to simulate model prediction during rendering process. Do not forget the **custom** parameter filename if necessary.
 
 Once you have simulation done. Checkout your **threshold_map/%MODEL_NAME%/simulation\_curves\_zones\_\*/** folder and use it with help of **display_simulation_curves.py** script.
-
-### Others...
-
-All others bash scripts are used to combine and run multiple model combinations...
 
 ## License
 
