@@ -24,8 +24,8 @@ for nb_zones in {4,6,8,10,12}; do
             # only compute if necessary (perhaps server will fall.. Just in case)
             if grep -q "${MODEL_NAME}" "${simulate_models}"; then
 
-                echo "${MODEL_NAME} results already generated..."
-            else
+                echo "Run simulation for ${MODEL_NAME}..."
+
                 # Use of already generated model
                 # python generate/generate_data_model_random.py --output ${FILENAME} --interval "0,${size}" --kind ${mode} --feature ${feature} --scenes "${scenes}" --nb_zones "${nb_zones}" --percent 1 --renderer "maxwell" --step 40 --random 1 --custom ${CUSTOM_MIN_MAX_FILENAME}
                 # python train_model.py --data ${FILENAME} --output ${MODEL_NAME} --choice ${model}

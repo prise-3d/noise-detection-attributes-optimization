@@ -17,11 +17,12 @@ Filters list:
 pip install -r requirements.txt
 ```
 
-Generate all needed data for each features (which requires the the whole dataset. In order to get it, you need to contact us).
+Generate all needed data for each features (which requires the whole dataset. In order to get it, you need to contact us).
 
 ```bash
 python generate/generate_all_data.py --feature all
 ```
+
 
 ## Project structure
 
@@ -73,7 +74,7 @@ ln -s /path/to/your/data dataset
 
 - **data/\***: folder which will contain all generated *.train* & *.test* files in order to train model.
 - **saved_models/\***: all scikit learn or keras models saved.
-- **models_info/\***: all markdown files generated to get quick information about model performance and prediction.obtained after running runAll_maxwell.sh script.
+- **models_info/\***: all markdown files generated to get quick information about model performance and prediction obtained after running `run/runAll_*.sh` script.
 - **results/**:  This folder contains `model_comparisons.csv` file used for store models performance.
 
 
