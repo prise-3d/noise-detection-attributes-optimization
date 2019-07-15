@@ -162,9 +162,9 @@ def main():
 
     parser = argparse.ArgumentParser(description="Compute and prepare data of feature of all scenes (keep in memory min and max value found)")
 
+   
     parser.add_argument('--feature', type=str, 
-                                    help="feature choice in order to compute data (use 'all' if all features are needed)", 
-                                    choices=features_choices)
+                                    help="feature choice in order to compute data (use 'all' if all features are needed)")
 
     args = parser.parse_args()
 
@@ -177,6 +177,10 @@ def main():
             generate_data_svd(m, 'svdn')
             generate_data_svd(m, 'svdne')
     else:
+
+        if p_feature not in features_choices:
+            raise ValueError('Unknown feature choice : ', features_choices)
+            
         generate_data_svd(p_feature, 'svd')
         generate_data_svd(p_feature, 'svdn')
         generate_data_svd(p_feature, 'svdne')
