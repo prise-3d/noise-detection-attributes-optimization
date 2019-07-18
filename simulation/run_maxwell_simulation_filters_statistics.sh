@@ -22,7 +22,7 @@ for nb_zones in {4,6,8,10,12}; do
             echo $MODEL_NAME
 
             # only compute if necessary (perhaps server will fall.. Just in case)
-            if grep -q "${MODEL_NAME}" "${simulate_models}"; then
+            if grep -xq "${MODEL_NAME}" "${simulate_models}"; then
 
                 echo "Run simulation for ${MODEL_NAME}..."
 
