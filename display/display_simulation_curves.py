@@ -1,13 +1,19 @@
+# main imports
 import numpy as np
 import pandas as pd
 
-import matplotlib.pyplot as plt
 import os, sys, argparse
 
-from modules.utils.data import get_image_features
+# image processing imports
+import matplotlib.pyplot as plt
 
-from modules.utils import config as cfg
+# modules imports
+sys.path.insert(0, '') # trick to enable import of main folder module
 
+import custom_config as cfg
+from data_attributes import get_image_features
+
+# other variables
 learned_zones_folder = cfg.learned_zones_folder
 models_name          = cfg.models_names_list
 label_freq           = 6
