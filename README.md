@@ -149,4 +149,4 @@ Once you have simulation done. Checkout your **threshold_map/%MODEL_NAME%/simula
 
 ## License
 
-[The MIT license](https://github.com/prise-3d/Thesis-NoiseDetection-26-attributes/blob/master/LICENSE)
+[The MIT license](LICENSE)
