@@ -4,6 +4,8 @@ from modules.config.attributes_config import *
 context_vars = vars()
 
 # folders
+logs_folder                        = 'logs'
+
 ## min_max_custom_folder           = 'custom_norm'
 ## correlation_indices_folder      = 'corr_indices'
 
