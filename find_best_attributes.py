@@ -27,8 +27,11 @@ import models as mdl
 from optimization.algorithms.IteratedLocalSearch import IteratedLocalSearch as ILS
 from optimization.solutions.BinarySolution import BinarySolution
 
-from optimization.updators.mutators.SimpleMutation import SimpleMutation, SimpleBinaryMutation
-from optimization.updators.policies.RandomPolicy import RandomPolicy
+from optimization.operators.mutators.SimpleMutation import SimpleMutation
+from optimization.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
+from optimization.operators.crossovers.SimpleCrossover import SimpleCrossover
+
+from optimization.operators.policies.RandomPolicy import RandomPolicy
 
 # variables and parameters
 models_list         = cfg.models_names_list
@@ -128,7 +131,7 @@ def main():
         return test_roc_auc
 
     # prepare optimization algorithm
-    updators = [SimpleBinaryMutation, SimpleMutation]
+    updators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover()]
     policy = RandomPolicy(updators)
 
     algo = ILS(init, evaluate, updators, policy, validator, True)
