@@ -2,8 +2,23 @@
 
 # erase "results/models_comparisons.csv" file and write new header
 file_path='results/models_comparisons.csv'
+list="all, center, split"
 
-erased=$1
+if [ -z "$1" ]
+  then
+    echo "No argument supplied"
+    echo "Need argument from [${list}]"
+    exit 1
+fi
+
+if [[ "$1" =~ ^(all|center|split)$ ]]; then
+    echo "$1 is in the list"
+else
+    echo "$1 is not in the list"
+fi
+
+data=$1
+erased=$2
 
 if [ "${erased}" == "Y" ]; then
     echo "Previous data file erased..."
@@ -19,4 +34,4 @@ fi
 size=26
 feature="filters_statistics"
 
-bash data_processing/generateAndTrain_maxwell_custom.sh ${size} ${feature}
+bash data_processing/generateAndTrain_maxwell_custom.sh ${size} ${feature} ${data}

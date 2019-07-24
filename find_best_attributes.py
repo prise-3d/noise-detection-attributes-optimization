@@ -36,6 +36,8 @@ from optimization.operators.policies.RandomPolicy import RandomPolicy
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
+ils_iteration       = 100
+ls_iteration        = 10
 
 # default validator
 def validator(solution):
@@ -136,10 +138,22 @@ def main():
 
     algo = ILS(init, evaluate, updators, policy, validator, True)
 
-    bestSol = algo.run(100, 10)
+    bestSol = algo.run(ils_iteration, ls_iteration)
 
     # print best solution found
     print("Found ", bestSol)
+
+    # save model information into .csv file
+    if not os.path.exists(cfg.results_information_folder):
+        os.makedirs(cfg.results_information_folder)
+
+    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_result_filename)
+
+    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness())
+    with open(filename_path, 'a') as f:
+        f.write(line_info + '\n')
+    
+    print('Result saved into %s' % filename_path)
 
 
 if __name__ == "__main__":
