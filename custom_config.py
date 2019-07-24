@@ -11,6 +11,7 @@ logs_folder                        = 'logs'
 
 # variables
 features_choices_labels         = ['filters_statistics']
+optimization_result_filename    = 'optimization_comparisons.csv'
 
 ## models_names_list               = ["svm_model","ensemble_model","ensemble_model_v2","deep_keras"]
 ## normalization_choices           = ['svd', 'svdn', 'svdne']
