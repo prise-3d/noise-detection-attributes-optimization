@@ -36,8 +36,8 @@ from optimization.operators.policies.RandomPolicy import RandomPolicy
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
-ils_iteration       = 100
-ls_iteration        = 10
+ils_iteration       = 10000
+ls_iteration        = 20
 
 # default validator
 def validator(solution):
