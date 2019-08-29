@@ -211,8 +211,6 @@ def main():
             print("Scene " + str(id_scene + 1) + "/" + str(len(scenes)) + " Done..")
             print("------------------------")
 
-            time.sleep(10)
-
 
 if __name__== "__main__":
     main()

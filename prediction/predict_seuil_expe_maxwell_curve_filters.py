@@ -43,7 +43,7 @@ def main():
         
     parser = argparse.ArgumentParser(description="Script which predicts threshold using specific model")
 
-    parser.add_argument('--interval', type=str, help='Interval value to keep from svd', default='"0, 200"')
+    parser.add_argument('--solution', type=str, help='Data of solution to specify filters to use')
     parser.add_argument('--model', type=str, help='.joblib or .json file (sklearn or keras model)')
     parser.add_argument('--mode', type=str, help='Kind of normalization level wished', choices=normalization_choices)
     parser.add_argument('--feature', type=str, help='feature data choice', choices=features_choices)
@@ -53,7 +53,7 @@ def main():
     args = parser.parse_args()
 
     # keep p_interval as it is
-    p_interval   = args.interval
+    p_solution   = args.solution
     p_model_file = args.model
     p_mode       = args.mode
     p_feature    = args.feature
@@ -122,8 +122,8 @@ def main():
                         tmp_file_path = tmp_filename.replace('__model__',  p_model_file.split('/')[-1].replace('.joblib', '_'))
                         block.save(tmp_file_path)
 
-                        python_cmd_line = "python prediction/predict_noisy_image_svd.py --image {0} --interval '{1}' --model {2} --mode {3} --feature {4}"
-                        python_cmd = python_cmd_line.format(tmp_file_path, p_interval, p_model_file, p_mode, p_feature) 
+                        python_cmd_line = "python prediction/predict_noisy_image_svd_filters.py --image {0} --solution '{1}' --model {2} --mode {3} --feature {4}"
+                        python_cmd = python_cmd_line.format(tmp_file_path, p_solution, p_model_file, p_mode, p_feature) 
 
                         # specify use of custom file for min max normalization
                         if p_custom:
