@@ -1,7 +1,7 @@
 #! bin/bash
 
 # erase "results/optimization_comparisons.csv" file and write new header
-file_path='results/optimization_comparisons.csv'
+file_path='results/optimization_comparisons_filters.csv'
 list="all, center, split"
 
 if [ -z "$1" ]
@@ -33,5 +33,6 @@ fi
 
 size=26
 feature="filters_statistics"
+filter="filters"
 
-bash data_processing/generateAndTrain_maxwell_custom_optimization.sh ${size} ${feature} ${data}
+bash data_processing/generateAndTrain_maxwell_custom_optimization.sh ${size} ${feature} ${data} ${filter}

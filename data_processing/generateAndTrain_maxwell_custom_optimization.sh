@@ -21,9 +21,19 @@ if [ -z "$3" ]
     exit 1
 fi
 
+if [ -z "$4" ]
+  then
+    echo "No argument supplied"
+    echo "Use of filters or attributes"
+    exit 1
+fi
+
+
 size=$1
 feature=$2
 data=$3
+filter=$4
+
 
 # selection of four scenes (only maxwell)
 scenes="A, D, G, H"
@@ -36,9 +46,9 @@ for nb_zones in {4,6,8,10,12}; do
     for mode in {"svd","svdn","svdne"}; do
         for model in {"svm_model","ensemble_model","ensemble_model_v2"}; do
 
-            FILENAME="data/${model}_N${size}_B${start}_E${end}_nb_zones_${nb_zones}_${feature}_${mode}_${data}"
-            MODEL_NAME="${model}_N${size}_B${start}_E${end}_nb_zones_${nb_zones}_${feature}_${mode}_${data}"
-            CUSTOM_MIN_MAX_FILENAME="N${size}_B${start}_E${end}_nb_zones_${nb_zones}_${feature}_${mode}_${data}_min_max"
+            FILENAME="data/${model}_N${size}_B${start}_E${end}_nb_zones_${nb_zones}_${feature}_${mode}_${data}_${filter}"
+            MODEL_NAME="${model}_N${size}_B${start}_E${end}_nb_zones_${nb_zones}_${feature}_${mode}_${data}_${filter}"
+            CUSTOM_MIN_MAX_FILENAME="N${size}_B${start}_E${end}_nb_zones_${nb_zones}_${feature}_${mode}_${data}_${filter}_min_max"
 
             echo $FILENAME
 
@@ -48,7 +58,7 @@ for nb_zones in {4,6,8,10,12}; do
                 echo "${MODEL_NAME} results already generated..."
             else
                 python generate/generate_data_model_random_${data}.py --output ${FILENAME} --interval "${start},${end}" --kind ${mode} --feature ${feature} --scenes "${scenes}" --nb_zones "${nb_zones}" --percent 1 --renderer "maxwell" --step 40 --random 1 --custom ${CUSTOM_MIN_MAX_FILENAME}
-                python find_best_attributes.py --data ${FILENAME} --choice ${model}
+                python find_best_${filter}.py --data ${FILENAME} --choice ${model}
             fi
         done
     done

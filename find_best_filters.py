@@ -47,9 +47,9 @@ def validator(solution):
 
     return True
 
-# init solution (26 attributes)
+# init solution (13 filters)
 def init():
-    return BinarySolution([], number_of_values).random(validator)
+    return BinarySolution([], 13).random(validator)
 
 def loadDataset(filename):
 
@@ -117,7 +117,8 @@ def main():
 
         for index, value in enumerate(solution.data): 
             if value == 1: 
-                indices.append(index) 
+                indices.append(index*2) 
+                indices.append(index*2+1) 
 
         # keep only selected filters from solution
         x_train_filters = x_train.iloc[:, indices]
@@ -146,7 +147,7 @@ def main():
     if not os.path.exists(cfg.results_information_folder):
         os.makedirs(cfg.results_information_folder)
 
-    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_result_filename)
+    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_filters_result_filename)
 
     line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness())
     with open(filename_path, 'a') as f:
