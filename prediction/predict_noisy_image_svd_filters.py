@@ -86,11 +86,10 @@ def main():
         if p_mode == 'svdne':
 
             # set min_max_filename if custom use
-            min_max_file_path = custom_min_max_folder + '/' +  p_custom
+            min_max_file_path = os.path.join(custom_min_max_folder, p_custom)
 
             # need to read min_max_file
-            file_path = os.path.join(os.path.dirname(__file__), min_max_file_path)
-            with open(file_path, 'r') as f:
+            with open(min_max_file_path, 'r') as f:
                 min_val = float(f.readline().replace('\n', ''))
                 max_val = float(f.readline().replace('\n', ''))
 
@@ -105,11 +104,10 @@ def main():
         if p_mode == 'svdne':
 
             # set min_max_filename if custom use
-            min_max_file_path = path + '/' + p_feature + min_max_ext
+            min_max_file_path = os.path.join(path, p_feature + min_max_ext)
 
             # need to read min_max_file
-            file_path = os.path.join(os.path.dirname(__file__), min_max_file_path)
-            with open(file_path, 'r') as f:
+            with open(min_max_file_path, 'r') as f:
                 min_val = float(f.readline().replace('\n', ''))
                 max_val = float(f.readline().replace('\n', ''))
 
