@@ -1,7 +1,7 @@
 #! bin/bash
 
 # erase "results/optimization_comparisons.csv" file and write new header
-file_path='results/optimization_comparisons.csv'
+file_path='results/optimization_comparisons_filters.csv'
 list="all, center, split"
 
 if [ -z "$1" ]
@@ -21,7 +21,7 @@ data=$1
 erased=$2
 
 if [ "${erased}" == "Y" ]; then
-    echo "Previous data file erased..."
+    echo "Previous results file erased..."
     rm ${file_path}
     mkdir -p results
     touch ${file_path}
@@ -33,5 +33,6 @@ fi
 
 size=26
 feature="filters_statistics"
+filter="filters"
 
-bash data_processing/generateAndTrain_maxwell_custom_optimization.sh ${size} ${feature} ${data}
+bash data_processing/generateAndTrain_maxwell_custom_optimization.sh ${size} ${feature} ${data} ${filter}

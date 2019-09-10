@@ -49,6 +49,7 @@ def main():
     parser.add_argument('--feature', type=str, help='feature data choice', choices=features_choices)
     #parser.add_argument('--limit_detection', type=int, help='Specify number of same prediction to stop threshold prediction', default=2)
     parser.add_argument('--custom', type=str, help='Name of custom min max file if use of renormalization of data', default=False)
+    parser.add_argument('--filter', type=str, help='filter reduction solution used', choices=cfg.filter_reduction_choices)
 
     args = parser.parse_args()
 
@@ -59,6 +60,7 @@ def main():
     p_feature    = args.feature
     #p_limit      = args.limit
     p_custom     = args.custom
+    p_filter     = args.filter
 
     scenes = os.listdir(scenes_path)
     scenes = [s for s in scenes if s in maxwell_scenes]
@@ -122,7 +124,7 @@ def main():
                         tmp_file_path = tmp_filename.replace('__model__',  p_model_file.split('/')[-1].replace('.joblib', '_'))
                         block.save(tmp_file_path)
 
-                        python_cmd_line = "python prediction/predict_noisy_image_svd_filters.py --image {0} --solution '{1}' --model {2} --mode {3} --feature {4}"
+                        python_cmd_line = "python prediction/predict_noisy_image_svd_" + p_filter + ".py --image {0} --solution '{1}' --model {2} --mode {3} --feature {4}"
                         python_cmd = python_cmd_line.format(tmp_file_path, p_solution, p_model_file, p_mode, p_feature) 
 
                         # specify use of custom file for min max normalization
