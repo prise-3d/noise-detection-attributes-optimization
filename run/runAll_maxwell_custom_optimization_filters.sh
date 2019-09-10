@@ -21,7 +21,7 @@ data=$1
 erased=$2
 
 if [ "${erased}" == "Y" ]; then
-    echo "Previous data file erased..."
+    echo "Previous results file erased..."
     rm ${file_path}
     mkdir -p results
     touch ${file_path}
