@@ -5,6 +5,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import logging
+import datetime
 
 # model imports
 from sklearn.model_selection import train_test_split
@@ -49,7 +50,7 @@ def validator(solution):
 
 # init solution (26 attributes)
 def init():
-    return BinarySolution([], number_of_values).random(validator)
+    return BinarySolution([], 26).random(validator)
 
 def loadDataset(filename):
 
@@ -100,6 +101,8 @@ def main():
     p_data_file = args.data
     p_choice    = args.choice
 
+    print(p_data_file)
+
     # load data from file
     x_train, y_train, x_test, y_test = loadDataset(p_data_file)
 
@@ -112,6 +115,7 @@ def main():
     # define evaluate function here (need of data information)
     def evaluate(solution):
 
+        start = datetime.datetime.now()
         # get indices of filters data to use (filters selection from solution)
         indices = []
 
@@ -129,12 +133,19 @@ def main():
         y_test_model = model.predict(x_test_filters)
         test_roc_auc = roc_auc_score(y_test, y_test_model)
 
+        end = datetime.datetime.now()
+
+        diff = end - start
+
+        print("Evaluation took :", divmod(diff.days * 86400 + diff.seconds, 60))
+
         return test_roc_auc
 
     # prepare optimization algorithm
     updators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover()]
     policy = RandomPolicy(updators)
 
+    print("Start running ILS")
     algo = ILS(init, evaluate, updators, policy, validator, True)
 
     bestSol = algo.run(ils_iteration, ls_iteration)
@@ -146,9 +157,19 @@ def main():
     if not os.path.exists(cfg.results_information_folder):
         os.makedirs(cfg.results_information_folder)
 
-    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_result_filename)
+    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_attributes_result_filename)
 
-    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness())
+    filters_counter = 0
+    # count number of filters
+    for index, item in enumerate(bestSol.data):
+        if index != 0 and index % 2 == 1:
+
+            # if two attributes are used
+            if item == 1 or bestSol.data[index - 1] == 1:
+                filters_counter += 1
+
+
+    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness())
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     

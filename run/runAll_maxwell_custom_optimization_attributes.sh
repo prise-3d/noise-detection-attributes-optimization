@@ -28,7 +28,6 @@ if [ "${erased}" == "Y" ]; then
 
     # add of header
     echo 'data_file; ils_iteration; ls_iteration; best_solution; nb_attributes; nb_filters; fitness (roc test);' >> ${file_path}
-
 fi
 
 size=26
