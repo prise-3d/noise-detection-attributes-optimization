@@ -27,4 +27,8 @@ simulate_models*.csv
 
 # log file if used
 logs
+backups
 *.log
+
+oar.sh
+params.txt
