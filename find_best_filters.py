@@ -33,6 +33,8 @@ from optimization.operators.crossovers.SimpleCrossover import SimpleCrossover
 
 from optimization.operators.policies.RandomPolicy import RandomPolicy
 
+from optimization.checkpoints.BasicCheckpoint import BasicCheckpoint
+
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
@@ -132,11 +134,17 @@ def main():
 
         return test_roc_auc
 
+    if not os.path.exists(cfg.backup_folder):
+        os.makedirs(cfg.backup_folder)
+
+    backup_file_path = os.path.join(cfg.backup_folder, p_data_file.split('/')[-1] + '.csv')
+
     # prepare optimization algorithm
     updators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover()]
     policy = RandomPolicy(updators)
 
     algo = ILS(init, evaluate, updators, policy, validator, True)
+    algo.addCheckpoint(_class=BasicCheckpoint, _every=1, _filepath=backup_file_path)
 
     bestSol = algo.run(ils_iteration, ls_iteration)
 
