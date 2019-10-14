@@ -74,6 +74,7 @@ def construct_new_line(path_seuil, interval, line, choice, each, norm):
 
     return line
 
+
 def get_min_max_value_interval(_scenes_list, _interval, _feature):
 
     global min_value_interval, max_value_interval
@@ -183,7 +184,7 @@ def generate_data_model(_scenes_list, _filename, _interval, _choice, _feature, _
 
             # if custom normalization choices then we use svd values not already normalized
             if _custom:
-                data_filename = _feature + "_svd"+ generic_output_file_svd
+                data_filename = _feature + "_svd" + generic_output_file_svd
             else:
                 data_filename = _feature + "_" + _choice + generic_output_file_svd
 
