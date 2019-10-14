@@ -78,48 +78,27 @@ def main():
             indices.append(index*2) 
             indices.append(index*2+1) 
 
-    # check if custom min max file is used
-    if p_custom:
-        
-        test_data = data[indices]
-        
-        if p_mode == 'svdne':
+    # No need to use custom normalization with this kind of process 
+    # check mode to normalize data
+    if p_mode == 'svdne':
 
-            # set min_max_filename if custom use
-            min_max_file_path = os.path.join(custom_min_max_folder, p_custom)
+        # set min_max_filename if custom use
+        min_max_file_path = os.path.join(path, p_feature + min_max_ext)
 
-            # need to read min_max_file
-            with open(min_max_file_path, 'r') as f:
-                min_val = float(f.readline().replace('\n', ''))
-                max_val = float(f.readline().replace('\n', ''))
+        # need to read min_max_file
+        with open(min_max_file_path, 'r') as f:
+            min_val = float(f.readline().replace('\n', ''))
+            max_val = float(f.readline().replace('\n', ''))
 
-            test_data = utils.normalize_arr_with_range(test_data, min_val, max_val)
+        l_values = utils.normalize_arr_with_range(data, min_val, max_val)
 
-        if p_mode == 'svdn':
-            test_data = utils.normalize_arr(test_data)
-
+    elif p_mode == 'svdn':
+        l_values = utils.normalize_arr(data)
     else:
+        l_values = data
 
-        # check mode to normalize data
-        if p_mode == 'svdne':
-
-            # set min_max_filename if custom use
-            min_max_file_path = os.path.join(path, p_feature + min_max_ext)
-
-            # need to read min_max_file
-            with open(min_max_file_path, 'r') as f:
-                min_val = float(f.readline().replace('\n', ''))
-                max_val = float(f.readline().replace('\n', ''))
-
-            l_values = utils.normalize_arr_with_range(data, min_val, max_val)
-
-        elif p_mode == 'svdn':
-            l_values = utils.normalize_arr(data)
-        else:
-            l_values = data
-
-        test_data = data[indices]
-
+    test_data = np.array(l_values)[indices]
+    
 
     # get prediction of model
     if kind_model == 'sklearn':
