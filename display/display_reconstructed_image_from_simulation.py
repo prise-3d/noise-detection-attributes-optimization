@@ -17,7 +17,7 @@ from data_attributes import get_image_features
 learned_zones_folder = cfg.learned_zones_folder
 models_name          = cfg.models_names_list
 
-def reconstruct_image(folder_path, model_name):
+def reconstruct_image(folder_path, model_name, p_limit):
     """
     @brief Method used to display simulation given .csv files
     @param folder_path, folder which contains all .csv files obtained during simulation
@@ -39,20 +39,28 @@ def reconstruct_image(folder_path, model_name):
         print(scene_names[id])
         path_file = os.path.join(folder_path, f)
 
+        # TODO : check if necessary to keep information about zone learned when displaying data
         scenes_zones_used_file_path = os.path.join(learned_zones_folder_path, scene_names[id] + '.csv')
-        
+
+        # TODO : find estimated threshold for each zone scene using `data_files` and p_limit
+        # TODO : find images for each zone which are attached to this estimated threshold by the model
+        # TODO : reconstructed the image using these zones
+        # TODO : Save the image with generated name based on scene, model and `p_limit`
+
 
 def main():
 
     parser = argparse.ArgumentParser(description="Display simulations curves from simulation data")
 
     parser.add_argument('--folder', type=str, help='Folder which contains simulations data for scenes')
-    parser.add_argument('--scene', type=str, help='Scene name index')
     parser.add_argument('--model', type=str, help='Name of the model used for simulations')
+    parser.add_argument('--limit', type=int, help='Detection limit to target to stop rendering (number of times model tells image has not more noise)')
 
     args = parser.parse_args()
 
     p_folder = args.folder
+    p_limit  = args.limit
+    p_output = args.output
 
     if args.model:
         p_model = args.model
@@ -65,7 +73,7 @@ def main():
     
     print(p_model)
 
-    display_curves(p_folder, p_model)
+    reconstruct_image(p_folder, p_model, p_limit)
 
     print(p_folder)
 
