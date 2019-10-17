@@ -267,7 +267,6 @@ def main():
     p_renderer = args.renderer
     p_custom   = args.custom
 
-
     # list all possibles choices of renderer
     scenes_list = dt.get_renderer_scenes_names(p_renderer)
     scenes_indices = dt.get_renderer_scenes_indices(p_renderer)

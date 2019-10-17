@@ -42,10 +42,12 @@ def display_curves(folder_path, model_name):
 
         scenes_zones_used_file_path = os.path.join(learned_zones_folder_path, scene_names[id] + '.csv')
 
+        # by default zone used is empty
         zones_used = []
 
-        with open(scenes_zones_used_file_path, 'r') as f:
-            zones_used = [int(x) for x in f.readline().split(';') if x != '']
+        if os.path.exists(scenes_zones_used_file_path):
+            with open(scenes_zones_used_file_path, 'r') as f:
+                zones_used = [int(x) for x in f.readline().split(';') if x != '']
 
         print(zones_used)
 
