@@ -111,6 +111,7 @@ def w2d(arr, mode='haar', level=1):
 
     return imArray_H
 
+
 def _get_mscn_variance(block, sub_block_size=(50, 50)):
 
     blocks = segmentation.divide_in_blocks(block, sub_block_size)
