@@ -67,14 +67,11 @@ def rfe_svm_model(X_train, y_train, n_components=1):
 
     Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
     gammas = [0.001, 0.01, 0.1, 1, 5, 10, 100]
-    param_grid = {'estimator__kernel':['rbf'], 'estimator__C': Cs, 'estimator__gamma' : gammas}
+    param_grid = [{'estimator__C': Cs, 'estimator__gamma' : gammas}]
 
-    svc = svm.SVC(probability=True)
-
-    rfe_model = RFECV(svc, step=1, cv=10, verbose=0)
-
-    clf = GridSearchCV(rfe_model, param_grid, cv=10, scoring='accuracy', verbose=1)
-
+    estimator = svm.SVC(kernel="linear")
+    selector = RFECV(estimator, step=1, cv=4, verbose=0)
+    clf = GridSearchCV(selector, param_grid, cv=5, verbose=1)
     clf.fit(X_train, y_train)
 
     print(clf.best_estimator_)
@@ -82,6 +79,8 @@ def rfe_svm_model(X_train, y_train, n_components=1):
     print(clf.best_estimator_.n_features_)
     print('------------------------------')
     print(clf.best_estimator_.ranking_)
+    print('------------------------------')
+    print(clf.best_estimator_.support_)
     print('------------------------------')
     print(clf.best_estimator_.grid_scores_)
 
