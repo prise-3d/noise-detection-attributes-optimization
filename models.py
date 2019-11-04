@@ -4,6 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
 
 
@@ -62,6 +63,31 @@ def ensemble_model_v2(X_train, y_train):
 
     return ensemble_model
 
+def rfe_svm_model(X_train, y_train, n_components=1):
+
+    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    gammas = [0.001, 0.01, 0.1, 1, 5, 10, 100]
+    param_grid = {'estimator__kernel':['rbf'], 'estimator__C': Cs, 'estimator__gamma' : gammas}
+
+    svc = svm.SVC(probability=True)
+
+    rfe_model = RFECV(svc, step=1, cv=10, verbose=0)
+
+    clf = GridSearchCV(rfe_model, param_grid, cv=10, scoring='accuracy', verbose=1)
+
+    clf.fit(X_train, y_train)
+
+    print(clf.best_estimator_)
+    print('------------------------------')
+    print(clf.best_estimator_.n_features_)
+    print('------------------------------')
+    print(clf.best_estimator_.ranking_)
+    print('------------------------------')
+    print(clf.best_estimator_.grid_scores_)
+
+    return clf.best_estimator_.estimator_
+
+
 def get_trained_model(choice, X_train, y_train):
 
     if choice == 'svm_model':
@@ -72,3 +98,6 @@ def get_trained_model(choice, X_train, y_train):
 
     if choice == 'ensemble_model_v2':
         return ensemble_model_v2(X_train, y_train)
+
+    if choice == 'rfe_svm_model':
+        return rfe_svm_model(X_train, y_train)
