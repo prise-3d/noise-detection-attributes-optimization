@@ -142,11 +142,6 @@ def main():
 
                 print(str(id_block) + " : " + str(current_quality_image) + "/" + str(threshold_expes[id_block]) + " => " + str(prediction))
 
-        print("------------------------")
-        print("Scene " + str(id_scene + 1) + "/" + str(len(scenes)))
-        print("------------------------")
-
-    # end of scene => display of results
 
     # construct path using model name for saving threshold map folder
     model_threshold_path = os.path.join(threshold_map_folder, p_model_file.split('/')[-1].replace('.joblib', ''))
@@ -155,7 +150,7 @@ def main():
     if not os.path.exists(model_threshold_path):
         os.makedirs(model_threshold_path)
 
-    map_filename = os.path.join(model_threshold_path, simulation_curves_zones + folder_scene)
+    map_filename = os.path.join(model_threshold_path, simulation_curves_zones + scene_name)
     f_map = open(map_filename, 'w')
 
     for line in block_predictions_str:

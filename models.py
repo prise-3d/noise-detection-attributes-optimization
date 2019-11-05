@@ -63,21 +63,6 @@ def ensemble_model_v2(X_train, y_train):
 
     return ensemble_model
 
-def rfe_svm_model(X_train, y_train, n_components=1):
-
-    # Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-    # gammas = [0.001, 0.01, 0.1, 1, 5, 10, 100]
-    # param_grid = [{'estimator__C': Cs, 'estimator__gamma' : gammas}]
-
-    gammas = [0.001, 0.01, 0.1]
-    param_grid = [{'estimator__gamma' : gammas}]
-
-    estimator = svm.SVC(kernel="linear")
-    selector = RFECV(estimator, step=1, cv=4, verbose=0)
-    clf = GridSearchCV(selector, param_grid, cv=5, verbose=1)
-    clf.fit(X_train, y_train)
-
-    return (clf.best_estimator_, clf.best_estimator_.support_)
 
 
 def get_trained_model(choice, X_train, y_train):
@@ -90,6 +75,3 @@ def get_trained_model(choice, X_train, y_train):
 
     if choice == 'ensemble_model_v2':
         return ensemble_model_v2(X_train, y_train)
-
-    if choice == 'rfe_svm_model':
-        return rfe_svm_model(X_train, y_train)
