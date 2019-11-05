@@ -88,6 +88,7 @@ def main():
 
     print("-------------------------------------------")
     print("Train dataset size: ", final_df_train_size)
+
     model = mdl.get_trained_model(p_choice, x_dataset_train, y_dataset_train)
 
     #######################

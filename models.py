@@ -4,6 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
 
 
@@ -61,6 +62,8 @@ def ensemble_model_v2(X_train, y_train):
     ensemble_model.fit(X_train, y_train)
 
     return ensemble_model
+
+
 
 def get_trained_model(choice, X_train, y_train):
 

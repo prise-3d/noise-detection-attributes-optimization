@@ -61,7 +61,7 @@ for nb_zones in {10,12}; do
                 python generate/generate_data_model_random_${data}.py --output ${FILENAME} --interval "${start},${end}" --kind ${mode} --feature ${feature} --scenes "${scenes}" --nb_zones "${nb_zones}" --percent 1 --renderer "maxwell" --step 40 --random 1 --custom ${CUSTOM_MIN_MAX_FILENAME}
                 
                 echo "Train ${MODEL_NAME}"
-                python find_best_${filter}.py --data ${FILENAME} --choice ${model} &
+                #python find_best_${filter}.py --data ${FILENAME} --choice ${model} &
             fi
         done
     done

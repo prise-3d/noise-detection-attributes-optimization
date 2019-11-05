@@ -16,6 +16,7 @@ optimization_filters_result_filename    = 'optimization_comparisons_filters.csv'
 optimization_attributes_result_filename = 'optimization_comparisons_attributes.csv'
 
 filter_reduction_choices                = ['attributes', 'filters']
+models_names_list                       = ["svm_model","ensemble_model","ensemble_model_v2","deep_keras"]
 
 ## models_names_list               = ["svm_model","ensemble_model","ensemble_model_v2","deep_keras"]
 ## normalization_choices           = ['svd', 'svdn', 'svdne']

@@ -52,14 +52,14 @@ def main():
         kind_model = 'keras'
 
     if 'corr' in p_model_file:
-        corr_model = True
+        indices_model = True
 
         indices_corr_path = os.path.join(cfg.correlation_indices_folder, p_model_file.split('/')[1].replace('.json', '').replace('.joblib', '') + '.csv')
 
         with open(indices_corr_path, 'r') as f:
-            data_corr_indices = [int(x) for x in f.readline().split(';') if x != '']
+            selected_indices = [int(x) for x in f.readline().split(';') if x != '']
     else:
-        corr_model = False
+        indices_model = False
 
 
     if kind_model == 'sklearn':
@@ -87,8 +87,8 @@ def main():
     # check if custom min max file is used
     if p_custom:
 
-        if corr_model:
-            test_data = data[data_corr_indices]
+        if indices_model:
+            test_data = data[selected_indices]
         else:
             test_data = data[begin:end]
 
@@ -127,8 +127,8 @@ def main():
         else:
             l_values = data
 
-        if corr_model:
-            test_data = data[data_corr_indices]
+        if indices_model:
+            test_data = data[selected_indices]
         else:
             test_data = data[begin:end]
 

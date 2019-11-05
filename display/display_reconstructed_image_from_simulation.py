@@ -75,7 +75,7 @@ def reconstruct_image(folder_path, model_name, p_limit):
 
             row = np.asarray(row)
 
-            threshold = row[2]
+            #threshold = row[2]
             start_index = row[3]
             step_value = row[4]
             rendering_predictions = row[5:]
