@@ -250,6 +250,8 @@ def main():
         index = scenes_indices.index(scene_id.strip())
         scenes_selected.append(scenes_list[index])
 
+    print(scenes_selected)
+
     # find min max value if necessary to renormalize data
     if p_custom:
         get_min_max_value_interval(scenes_list, p_interval, p_feature)
@@ -264,6 +266,7 @@ def main():
         with open(min_max_filename_path, 'w') as f:
             f.write(str(min_value_interval) + '\n')
             f.write(str(max_value_interval) + '\n')
+
 
     # create database using img folder (generate first time only)
     generate_data_model(p_filename, p_interval, p_kind, p_feature, scenes_selected, p_zones, p_percent, p_step, p_each, p_custom)

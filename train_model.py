@@ -11,7 +11,8 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
+import joblib
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import cross_val_score
 
