@@ -38,15 +38,15 @@ def get_image_features(data_type, block):
         # compute all filters statistics
         def get_stats(arr, I_filter):
 
-            e1       = np.abs(arr - I_filter)
-            L        = np.array(e1)
-            mu0      = np.mean(L)
-            A        = L - mu0
-            H        = A * A
-            E        = np.sum(H) / (img_width * img_height)
-            P        = np.sqrt(E)
+            # e1       = np.abs(arr - I_filter)
+            # L        = np.array(e1)
+            # mu0      = np.mean(L)
+            # A        = L - mu0
+            # H        = A * A
+            # E        = np.sum(H) / (img_width * img_height)
+            # P        = np.sqrt(E)
 
-            return mu0, P
+            return np.mean(I_filter), np.std(I_filter)
 
         stats = []
 
