@@ -10,7 +10,8 @@ import sklearn.svm as svm
 
 def _get_best_model(X_train, y_train):
 
-    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    #Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    Cs = [1, 2, 4, 8, 16, 32]
     gammas = [0.001, 0.01, 0.1, 1, 5, 10, 100]
     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
