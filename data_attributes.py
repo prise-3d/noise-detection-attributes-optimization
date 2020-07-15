@@ -4,7 +4,7 @@ import sys
 
 # image transform imports
 from PIL import Image
-from skimage import color
+from skimage import color, restoration
 from sklearn.decomposition import FastICA
 from sklearn.decomposition import IncrementalPCA
 from sklearn.decomposition import TruncatedSVD
@@ -12,6 +12,7 @@ from numpy.linalg import svd as lin_svd
 from scipy.signal import medfilt2d, wiener, cwt
 import pywt
 import cv2
+import gzip
 
 from ipfml.processing import transform, compression, segmentation
 from ipfml import utils
@@ -38,15 +39,16 @@ def get_image_features(data_type, block):
         # compute all filters statistics
         def get_stats(arr, I_filter):
 
-            # e1       = np.abs(arr - I_filter)
-            # L        = np.array(e1)
-            # mu0      = np.mean(L)
-            # A        = L - mu0
-            # H        = A * A
-            # E        = np.sum(H) / (img_width * img_height)
-            # P        = np.sqrt(E)
+            e1       = np.abs(arr - I_filter)
+            L        = np.array(e1)
+            mu0      = np.mean(L)
+            A        = L - mu0
+            H        = A * A
+            E        = np.sum(H) / (img_width * img_height)
+            P        = np.sqrt(E)
 
-            return np.mean(I_filter), np.std(I_filter)
+            return mu0, P
+            # return np.mean(I_filter), np.std(I_filter)
 
         stats = []
 
@@ -89,25 +91,44 @@ def get_image_features(data_type, block):
         
         data = np.array(data)
 
+    if 'statistics_extended' in data_type:
+
+        data = get_image_features('filters_statistics', block)
+
+        # add kolmogorov complexity
+        bytes_data = np.array(block).tobytes()
+        compress_data = gzip.compress(bytes_data)
+
+        data.append(data, sys.getsizeof(compress_data))
+
+        # add sobel complexity (kernel size of 5)
+        sobelx = cv2.Sobel(lab_img, cv2.CV_64F, 1, 0, ksize=5)
+        sobely = cv2.Sobel(lab_img, cv2.CV_64F, 0, 1,ksize=5)
+
+        sobel_mag = np.array(np.hypot(sobelx, sobely), 'uint8')  # magnitude
+
+        data.append(data, np.std(sobel_mag))
+
+    if 'lab' in data_type:
+
+        data = transform.get_LAB_L_SVD_s(block)
+
     return data
 
 
 def w2d(arr, mode='haar', level=1):
-    #convert to float   
+    #convert to float    
     imArray = arr
-    np.divide(imArray, 255)
 
-    # compute coefficients 
-    coeffs=pywt.wavedec2(imArray, mode, level=level)
+    sigma = restoration.estimate_sigma(imArray, average_sigmas=True, multichannel=False)
+    imArray_H = restoration.denoise_wavelet(imArray, sigma=sigma, wavelet='db1', mode='soft', 
+        wavelet_levels=2, 
+        multichannel=False, 
+        convert2ycbcr=False, 
+        method='VisuShrink', 
+        rescale_sigma=True)
 
-    #Process Coefficients
-    coeffs_H=list(coeffs)  
-    coeffs_H[0] *= 0
-
-    # reconstruction
-    imArray_H = pywt.waverec2(coeffs_H, mode)
-    imArray_H *= 255
-    imArray_H = np.uint8(imArray_H)
+    # imArray_H *= 100
 
     return imArray_H
 
