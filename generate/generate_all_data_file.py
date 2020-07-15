@@ -24,19 +24,15 @@ zone_folder             = cfg.zone_folder
 min_max_filename        = cfg.min_max_filename_extension
 
 # define all scenes values
-scenes_list             = cfg.scenes_names
-scenes_indexes          = cfg.scenes_indices
 choices                 = cfg.normalization_choices
-path                    = cfg.dataset_path
 zones                   = cfg.zones_indices
-seuil_expe_filename     = cfg.seuil_expe_filename
 
 features_choices        = cfg.features_choices_labels
-output_data_folder      = cfg.output_data_folder
+output_data_folder      = cfg.output_data_generated
 
 generic_output_file_svd = '_random.csv'
 
-def generate_data_svd(data_type, mode):
+def generate_data_svd(data_type, mode, dataset, output):
     """
     @brief Method which generates all .csv files from scenes
     @param data_type,  feature choice
@@ -44,7 +40,7 @@ def generate_data_svd(data_type, mode):
     @return nothing
     """
 
-    scenes = os.listdir(path)
+    scenes = os.listdir(dataset)
     # remove min max file from scenes folder
     scenes = [s for s in scenes if min_max_filename not in s]
 
@@ -52,13 +48,14 @@ def generate_data_svd(data_type, mode):
     min_val_found = sys.maxsize
     max_val_found = 0
 
-    data_min_max_filename = os.path.join(path, data_type + min_max_filename)
+    data_min_max_filename = os.path.join(dataset, data_type + min_max_filename)
 
     # go ahead each scenes
     for folder_scene in scenes:
 
         print(folder_scene)
-        scene_path = os.path.join(path, folder_scene)
+        scene_path = os.path.join(dataset, folder_scene)
+        output_scene_path = os.path.join(output_data_folder, output, folder_scene)
 
         # getting output filename
         output_svd_filename = data_type + "_" + mode + generic_output_file_svd
@@ -76,7 +73,11 @@ def generate_data_svd(data_type, mode):
             current_zone = "zone"+index_str
             zones_folder.append(current_zone)
 
-            zone_path = os.path.join(scene_path, current_zone)
+            zone_path = os.path.join(output_scene_path, current_zone)
+
+            if not os.path.exists(zone_path):
+                os.makedirs(zone_path)
+
             svd_file_path = os.path.join(zone_path, output_svd_filename)
 
             # add writer into list
@@ -116,7 +117,7 @@ def generate_data_svd(data_type, mode):
                     data = utils.normalize_arr_with_range(data, min_val, max_val)
 
                 if mode == 'svdn':
-                    data = utils.normalize_arr(data)
+                    data = utils.normalize_arr_with_range(data)
 
                 # save min and max found from dataset in order to normalize data using whole data known
                 if mode == 'svd':
@@ -164,26 +165,30 @@ def main():
 
    
     parser.add_argument('--feature', type=str, 
-                                    help="feature choice in order to compute data (use 'all' if all features are needed)")
+                                    help="feature choice in order to compute data (use 'all' if all features are needed)", required=True)
+    parser.add_argument('--dataset', type=str, help='dataset folder with all scenes', required=True)
+    parser.add_argument('--output', type=str, help='output expected name of generated file', required=True)
 
     args = parser.parse_args()
 
     p_feature = args.feature
+    p_dataset = args.dataset
+    p_output  = args.output
 
     # generate all or specific feature data
     if p_feature == 'all':
         for m in features_choices:
-            generate_data_svd(m, 'svd')
-            generate_data_svd(m, 'svdn')
-            generate_data_svd(m, 'svdne')
+            generate_data_svd(m, 'svd', p_dataset, p_output)
+            generate_data_svd(m, 'svdn', p_dataset, p_output)
+            generate_data_svd(m, 'svdne', p_dataset, p_output)
     else:
 
         if p_feature not in features_choices:
             raise ValueError('Unknown feature choice : ', features_choices)
             
-        generate_data_svd(p_feature, 'svd')
-        generate_data_svd(p_feature, 'svdn')
-        generate_data_svd(p_feature, 'svdne')
+        generate_data_svd(p_feature, 'svd', p_dataset, p_output)
+        generate_data_svd(p_feature, 'svdn', p_dataset, p_output)
+        generate_data_svd(p_feature, 'svdne', p_dataset, p_output)
 
 if __name__== "__main__":
     main()

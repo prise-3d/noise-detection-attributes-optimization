@@ -13,9 +13,9 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
+import joblib
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.externals import joblib
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
@@ -39,8 +39,8 @@ from optimization.checkpoints.BasicCheckpoint import BasicCheckpoint
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
-ils_iteration       = 1000
-ls_iteration        = 20
+ils_iteration       = 10
+ls_iteration        = 5
 
 # default validator
 def validator(solution):
@@ -95,13 +95,18 @@ def main():
 
     parser = argparse.ArgumentParser(description="Train and find best filters to use for model")
 
-    parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)')
-    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list)
+    parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)', required=True)
+    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, required=True)
+    parser.add_argument('--length', type=str, help='max data length (need to be specify for evaluator)', required=True)
 
     args = parser.parse_args()
 
     p_data_file = args.data
     p_choice    = args.choice
+    p_length    = args.length
+
+    global number_of_values
+    number_of_values = p_length
 
     print(p_data_file)
 
@@ -109,10 +114,10 @@ def main():
     x_train, y_train, x_test, y_test = loadDataset(p_data_file)
 
     # create `logs` folder if necessary
-    if not os.path.exists(cfg.logs_folder):
-        os.makedirs(cfg.logs_folder)
+    if not os.path.exists(cfg.output_logs_folder):
+        os.makedirs(cfg.output_logs_folder)
 
-    logging.basicConfig(format='%(asctime)s %(message)s', filename='logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
 
     # define evaluate function here (need of data information)
     def evaluate(solution):
@@ -130,6 +135,7 @@ def main():
         y_train_filters = y_train
         x_test_filters = x_test.iloc[:, indices]
 
+        # TODO : use of GPU implementation of SVM
         model = mdl.get_trained_model(p_choice, x_train_filters, y_train_filters)
         
         y_test_model = model.predict(x_test_filters)
@@ -143,10 +149,10 @@ def main():
 
         return test_roc_auc
 
-    if not os.path.exists(cfg.backup_folder):
-        os.makedirs(cfg.backup_folder)
+    if not os.path.exists(cfg.output_backup_folder):
+        os.makedirs(cfg.output_backup_folder)
 
-    backup_file_path = os.path.join(cfg.backup_folder, p_data_file.split('/')[-1] + '.csv')
+    backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '.csv')
 
     # prepare optimization algorithm
     updators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover()]

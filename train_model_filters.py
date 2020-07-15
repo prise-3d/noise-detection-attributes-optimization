@@ -9,9 +9,9 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
+import joblib
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import cross_val_score
 
@@ -22,7 +22,7 @@ import custom_config as cfg
 import models as mdl
 
 # variables and parameters
-saved_models_folder = cfg.saved_models_folder
+saved_models_folder = cfg.output_models
 models_list         = cfg.models_names_list
 
 current_dirpath     = os.getcwd()

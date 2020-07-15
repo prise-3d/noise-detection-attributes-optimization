@@ -11,7 +11,8 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
+import joblib
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import cross_val_score
 
@@ -22,7 +23,7 @@ import custom_config as cfg
 import models as mdl
 
 # variables and parameters
-saved_models_folder = cfg.saved_models_folder
+saved_models_folder = cfg.output_models
 models_list         = cfg.models_names_list
 
 current_dirpath     = os.getcwd()
@@ -33,7 +34,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Train SKLearn model and save it into .joblib file")
 
-    parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)')
+    parser.add_argument('--data', type=str, help='dataset filename prefiloc (without .train and .test)')
     parser.add_argument('--output', type=str, help='output file name desired for model (without .joblib extension)')
     parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list)
 
@@ -57,12 +58,12 @@ def main():
     dataset_test = shuffle(dataset_test)
 
     # get dataset with equal number of classes occurences
-    noisy_df_train = dataset_train[dataset_train.ix[:, 0] == 1]
-    not_noisy_df_train = dataset_train[dataset_train.ix[:, 0] == 0]
+    noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 1]
+    not_noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 0]
     nb_noisy_train = len(noisy_df_train.index)
 
-    noisy_df_test = dataset_test[dataset_test.ix[:, 0] == 1]
-    not_noisy_df_test = dataset_test[dataset_test.ix[:, 0] == 0]
+    noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 1]
+    not_noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 0]
     nb_noisy_test = len(noisy_df_test.index)
 
     final_df_train = pd.concat([not_noisy_df_train[0:nb_noisy_train], noisy_df_train])
@@ -76,11 +77,11 @@ def main():
     final_df_test_size = len(final_df_test.index)
 
     # use of the whole data set for training
-    x_dataset_train = final_df_train.ix[:,1:]
-    x_dataset_test = final_df_test.ix[:,1:]
+    x_dataset_train = final_df_train.iloc[:,1:]
+    x_dataset_test = final_df_test.iloc[:,1:]
 
-    y_dataset_train = final_df_train.ix[:,0]
-    y_dataset_test = final_df_test.ix[:,0]
+    y_dataset_train = final_df_train.iloc[:,0]
+    y_dataset_test = final_df_test.iloc[:,0]
 
     #######################
     # 2. Construction of the model : Ensemble model structure
@@ -111,13 +112,19 @@ def main():
         x_dataset_test = x_dataset_test[0:total_validation_size]
         y_dataset_test = y_dataset_test[0:total_validation_size]
 
-    X_test, X_val, y_test, y_val = train_test_split(x_dataset_test, y_dataset_test, test_size=0.5, random_state=1)
+    X_test, X_val, y_test, y_val = train_test_split(x_dataset_test, y_dataset_test, test_size=0.2, random_state=1)
 
     y_test_model = model.predict(X_test)
     y_val_model = model.predict(X_val)
 
     val_accuracy = accuracy_score(y_val, y_val_model)
     test_accuracy = accuracy_score(y_test, y_test_model)
+
+    print('Train dataset 1 ', np.any(y_test_model == 1))
+    print('Train dataset 0 ', np.any(y_test_model == 0))
+
+    print('Val dataset 1 ', np.any(y_val_model == 1))
+    print('Val dataset 0 ', np.any(y_val_model == 0))
 
     val_f1 = f1_score(y_val, y_val_model)
     test_f1 = f1_score(y_test, y_test_model)
@@ -130,7 +137,7 @@ def main():
     print("Validation: ", val_accuracy)
     print("Validation F1: ", val_f1)
     print("Test dataset size ", test_set_size)
-    print("Test: ", val_accuracy)
+    print("Test: ", test_accuracy)
     print("Test F1: ", test_f1)
 
     ##################
