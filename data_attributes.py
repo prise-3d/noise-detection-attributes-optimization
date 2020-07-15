@@ -99,15 +99,18 @@ def get_image_features(data_type, block):
         bytes_data = np.array(block).tobytes()
         compress_data = gzip.compress(bytes_data)
 
-        data.append(data, sys.getsizeof(compress_data))
+        data = np.append(data, sys.getsizeof(compress_data))
+
+        lab_img = transform.get_LAB_L(block)
+        arr = np.array(lab_img)
 
         # add sobel complexity (kernel size of 5)
-        sobelx = cv2.Sobel(lab_img, cv2.CV_64F, 1, 0, ksize=5)
-        sobely = cv2.Sobel(lab_img, cv2.CV_64F, 0, 1,ksize=5)
+        sobelx = cv2.Sobel(arr, cv2.CV_64F, 1, 0, ksize=5)
+        sobely = cv2.Sobel(arr, cv2.CV_64F, 0, 1,ksize=5)
 
         sobel_mag = np.array(np.hypot(sobelx, sobely), 'uint8')  # magnitude
 
-        data.append(data, np.std(sobel_mag))
+        data = np.append(data, np.std(sobel_mag))
 
     if 'lab' in data_type:
 

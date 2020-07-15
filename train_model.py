@@ -23,7 +23,7 @@ import custom_config as cfg
 import models as mdl
 
 # variables and parameters
-saved_models_folder = cfg.saved_models_folder
+saved_models_folder = cfg.output_models
 models_list         = cfg.models_names_list
 
 current_dirpath     = os.getcwd()

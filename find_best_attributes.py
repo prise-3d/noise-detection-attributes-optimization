@@ -13,9 +13,9 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
+import joblib
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.externals import joblib
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
@@ -39,8 +39,8 @@ from optimization.checkpoints.BasicCheckpoint import BasicCheckpoint
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
-ils_iteration       = 1000
-ls_iteration        = 20
+ils_iteration       = 10
+ls_iteration        = 5
 
 # default validator
 def validator(solution):
@@ -52,7 +52,7 @@ def validator(solution):
 
 # init solution (26 attributes)
 def init():
-    return BinarySolution([], number_of_values).random(validator)
+    return BinarySolution([], 26).random(validator)
 
 def loadDataset(filename):
 
@@ -117,7 +117,7 @@ def main():
     if not os.path.exists(cfg.output_logs_folder):
         os.makedirs(cfg.output_logs_folder)
 
-    logging.basicConfig(format='%(asctime)s %(message)s', filename='logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
 
     # define evaluate function here (need of data information)
     def evaluate(solution):

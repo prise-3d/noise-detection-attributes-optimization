@@ -10,4 +10,4 @@ matplotlib
 path.py
 pandas
 opencv-python
-gzip
+joblib

@@ -55,6 +55,7 @@ def generate_data_svd(data_type, mode, dataset, output):
 
         print(folder_scene)
         scene_path = os.path.join(dataset, folder_scene)
+        output_scene_path = os.path.join(output_data_folder, output, folder_scene)
 
         # getting output filename
         output_svd_filename = data_type + "_" + mode + generic_output_file_svd
@@ -72,7 +73,11 @@ def generate_data_svd(data_type, mode, dataset, output):
             current_zone = "zone"+index_str
             zones_folder.append(current_zone)
 
-            zone_path = os.path.join(scene_path, current_zone)
+            zone_path = os.path.join(output_scene_path, current_zone)
+
+            if not os.path.exists(zone_path):
+                os.makedirs(zone_path)
+
             svd_file_path = os.path.join(zone_path, output_svd_filename)
 
             # add writer into list
