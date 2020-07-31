@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
-from sklearn.metrics import accuracy_scorer
+from sklearn.metrics import accuracy_score
 from thundersvm import SVC
 
 # variables and parameters
@@ -14,7 +14,7 @@ n_predict = 0
 
 def my_accuracy_scorer(*args):
         global n_predict
-        score = accuracy_scorer(*args)
+        score = accuracy_score(*args)
         print('{0} - Score is {1}'.format(n_predict, score))
         n_predict += 1
         return score
