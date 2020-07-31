@@ -6,7 +6,18 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
+from sklearn.metrics.scorer import accuracy_scorer
+from thundersvm import SVC
 
+# variables and parameters
+n_predict = 0
+
+def my_accuracy_scorer(*args):
+        global n_predict
+        score = accuracy_scorer(*args)
+        print('{0} - Score is {1}'.format(n_predict, score))
+        n_predict += 1
+        return score
 
 def _get_best_model(X_train, y_train):
 
@@ -17,7 +28,7 @@ def _get_best_model(X_train, y_train):
     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
     svc = svm.SVC(probability=True)
-    clf = GridSearchCV(svc, param_grid, cv=5, scoring='accuracy', verbose=2)
+    clf = GridSearchCV(svc, param_grid, cv=10, verbose=1, scoring=my_accuracy_scorer)
 
     clf.fit(X_train, y_train)
 
@@ -28,6 +39,26 @@ def _get_best_model(X_train, y_train):
 def svm_model(X_train, y_train):
 
     return _get_best_model(X_train, y_train)
+
+
+def _get_best_gpu_model(X_train, y_train):
+
+    Cs = [0.001, 0.01, 0.1, 1, 2, 5, 10, 100, 1000]
+    gammas = [0.001, 0.01, 0.1, 1, 2, 5, 10, 100]
+    param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
+
+    svc = SVC(probability=True)
+    clf = GridSearchCV(svc, param_grid, cv=10, verbose=1, scoring=my_accuracy_scorer)
+
+    clf.fit(X_train, y_train)
+
+    model = clf.best_estimator_
+
+    return model
+
+def svm_gpu(X_train, y_train):
+
+    return _get_best_gpu_model(X_train, y_train)
 
 
 def ensemble_model(X_train, y_train):
@@ -71,6 +102,9 @@ def get_trained_model(choice, X_train, y_train):
 
     if choice == 'svm_model':
         return svm_model(X_train, y_train)
+
+    if choice == 'svm_gpu':
+        return svm_gpu(X_train, y_train)
 
     if choice == 'ensemble_model':
         return ensemble_model(X_train, y_train)
