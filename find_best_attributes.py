@@ -50,10 +50,6 @@ def validator(solution):
 
     return True
 
-# init solution (26 attributes)
-def init():
-    return BinarySolution([], 26).random(validator)
-
 def loadDataset(filename):
 
     ########################
@@ -149,6 +145,10 @@ def main():
         print("Evaluation took :", divmod(diff.days * 86400 + diff.seconds, 60))
 
         return test_roc_auc
+
+    # init solution (`n` attributes)
+    def init():
+        return BinarySolution([], number_of_values).random(validator)
 
     if not os.path.exists(cfg.output_backup_folder):
         os.makedirs(cfg.output_backup_folder)
