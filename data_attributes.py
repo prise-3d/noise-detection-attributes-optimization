@@ -104,6 +104,10 @@ def get_image_features(data_type, block):
         lab_img = transform.get_LAB_L(block)
         arr = np.array(lab_img)
 
+        # add of svd entropy
+        svd_entropy = utils.get_entropy(compression.get_SVD_s(arr))
+        data = np.append(data, svd_entropy)
+
         # add sobel complexity (kernel size of 3)
         sobelx = cv2.Sobel(arr, cv2.CV_64F, 1, 0, ksize=3)
         sobely = cv2.Sobel(arr, cv2.CV_64F, 0, 1,ksize=3)
