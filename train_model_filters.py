@@ -67,8 +67,8 @@ def main():
     not_noisy_df_test = dataset_test[dataset_test.ix[:, 0] == 0]
     nb_noisy_test = len(noisy_df_test.index)
 
-    final_df_train = pd.concat([not_noisy_df_train[0:nb_noisy_train], noisy_df_train])
-    final_df_test = pd.concat([not_noisy_df_test[0:nb_noisy_test], noisy_df_test])
+    final_df_train = pd.concat([not_noisy_df_train, noisy_df_train])
+    final_df_test = pd.concat([not_noisy_df_test, noisy_df_test])
 
     # shuffle data another time
     final_df_train = shuffle(final_df_train)

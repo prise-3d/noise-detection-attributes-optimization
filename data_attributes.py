@@ -124,7 +124,7 @@ def w2d(arr, mode='haar', level=1):
     imArray = arr
 
     sigma = restoration.estimate_sigma(imArray, average_sigmas=True, multichannel=False)
-    imArray_H = restoration.denoise_wavelet(imArray, sigma=sigma, wavelet='db1', mode='soft', 
+    imArray_H = restoration.denoise_wavelet(imArray, sigma=sigma, wavelet='db1', mode='hard', 
         wavelet_levels=2, 
         multichannel=False, 
         convert2ycbcr=False, 

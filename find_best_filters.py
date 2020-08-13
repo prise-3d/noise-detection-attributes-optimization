@@ -68,14 +68,14 @@ def loadDataset(filename):
     # get dataset with equal number of classes occurences
     noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 1]
     not_noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 0]
-    nb_noisy_train = len(noisy_df_train.index)
+    #nb_noisy_train = len(noisy_df_train.index)
 
     noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 1]
     not_noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 0]
-    nb_noisy_test = len(noisy_df_test.index)
+    #nb_noisy_test = len(noisy_df_test.index)
 
-    final_df_train = pd.concat([not_noisy_df_train[0:nb_noisy_train], noisy_df_train])
-    final_df_test = pd.concat([not_noisy_df_test[0:nb_noisy_test], noisy_df_test])
+    final_df_train = pd.concat([not_noisy_df_train, noisy_df_train])
+    final_df_test = pd.concat([not_noisy_df_test, noisy_df_test])
 
     # shuffle data another time
     final_df_train = shuffle(final_df_train)
