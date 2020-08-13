@@ -148,6 +148,7 @@ def main():
 
     # init solution (`n` attributes)
     def init():
+        global number_of_values
         return BinarySolution([], number_of_values).random(validator)
 
     if not os.path.exists(cfg.output_backup_folder):
