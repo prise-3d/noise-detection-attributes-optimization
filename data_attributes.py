@@ -104,6 +104,12 @@ def get_image_features(data_type, block):
         lab_img = transform.get_LAB_L(block)
         arr = np.array(lab_img)
 
+        # add sobel complexity (kernel size of 3)
+        sobelx = cv2.Sobel(arr, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(arr, cv2.CV_64F, 0, 1,ksize=3)
+
+        sobel_mag = np.array(np.hypot(sobelx, sobely), 'uint8')  # magnitude
+
         # add sobel complexity (kernel size of 5)
         sobelx = cv2.Sobel(arr, cv2.CV_64F, 1, 0, ksize=5)
         sobely = cv2.Sobel(arr, cv2.CV_64F, 0, 1,ksize=5)
