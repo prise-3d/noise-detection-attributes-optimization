@@ -110,6 +110,8 @@ def get_image_features(data_type, block):
 
         sobel_mag = np.array(np.hypot(sobelx, sobely), 'uint8')  # magnitude
 
+        data = np.append(data, np.std(sobel_mag))
+        
         # add sobel complexity (kernel size of 5)
         sobelx = cv2.Sobel(arr, cv2.CV_64F, 1, 0, ksize=5)
         sobely = cv2.Sobel(arr, cv2.CV_64F, 0, 1,ksize=5)
