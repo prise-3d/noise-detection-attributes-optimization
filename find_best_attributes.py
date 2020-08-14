@@ -39,8 +39,8 @@ from optimization.checkpoints.BasicCheckpoint import BasicCheckpoint
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
-ils_iteration       = 10
-ls_iteration        = 5
+ils_iteration       = 2000
+ls_iteration        = 10
 
 # default validator
 def validator(solution):
@@ -116,6 +116,10 @@ def main():
 
     logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
 
+    # init solution (`n` attributes)
+    def init():
+        return BinarySolution([], number_of_values).random(validator)
+
     # define evaluate function here (need of data information)
     def evaluate(solution):
 
@@ -145,11 +149,6 @@ def main():
         print("Evaluation took :", divmod(diff.days * 86400 + diff.seconds, 60))
 
         return test_roc_auc
-
-    # init solution (`n` attributes)
-    def init():
-        global number_of_values
-        return BinarySolution([], number_of_values).random(validator)
 
     if not os.path.exists(cfg.output_backup_folder):
         os.makedirs(cfg.output_backup_folder)

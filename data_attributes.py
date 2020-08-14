@@ -99,7 +99,9 @@ def get_image_features(data_type, block):
         bytes_data = np.array(block).tobytes()
         compress_data = gzip.compress(bytes_data)
 
-        data = np.append(data, sys.getsizeof(compress_data))
+        mo_size = sys.getsizeof(compress_data) / 1024.
+        go_size = mo_size / 1024.
+        data = np.append(data, go_size)
 
         lab_img = transform.get_LAB_L(block)
         arr = np.array(lab_img)
