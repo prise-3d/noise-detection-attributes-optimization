@@ -156,7 +156,7 @@ def main():
         os.makedirs(cfg.output_backup_folder)
 
     backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '.csv')
-    ucb_backup_file_path = os.path.join(cfg.backup_folder, p_data_file.split('/')[-1] + '_ucbPolicy.csv')
+    ucb_backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '_ucbPolicy.csv')
 
     # prepare optimization algorithm
     operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
