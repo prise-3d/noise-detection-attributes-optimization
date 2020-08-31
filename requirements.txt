@@ -11,3 +11,4 @@ path.py
 pandas
 opencv-python
 joblib
+macop

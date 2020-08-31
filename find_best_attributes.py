@@ -25,16 +25,18 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from optimization.algorithms.IteratedLocalSearch import IteratedLocalSearch as ILS
-from optimization.solutions.BinarySolution import BinarySolution
+from macop.algorithms.IteratedLocalSearch import IteratedLocalSearch as ILS
+from macop.solutions.BinarySolution import BinarySolution
 
-from optimization.operators.mutators.SimpleMutation import SimpleMutation
-from optimization.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
-from optimization.operators.crossovers.SimpleCrossover import SimpleCrossover
+from macop.operators.mutators.SimpleMutation import SimpleMutation
+from macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
+from macop.operators.crossovers.SimpleCrossover import SimpleCrossover
+from macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
 
-from optimization.operators.policies.RandomPolicy import RandomPolicy
+from macop.operators.policies.UCBPolicy import UCBPolicy
 
-from optimization.checkpoints.BasicCheckpoint import BasicCheckpoint
+from macop.checkpoints.BasicCheckpoint import BasicCheckpoint
+from macop.checkpoints.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
@@ -154,13 +156,15 @@ def main():
         os.makedirs(cfg.output_backup_folder)
 
     backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '.csv')
+    ucb_backup_file_path = os.path.join(cfg.backup_folder, p_data_file.split('/')[-1] + '_ucbPolicy.csv')
 
     # prepare optimization algorithm
-    updators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover()]
-    policy = RandomPolicy(updators)
+    operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
+    policy = UCBPolicy(updators)
 
     algo = ILS(init, evaluate, updators, policy, validator, True)
-    algo.addCheckpoint(_class=BasicCheckpoint, _every=1, _filepath=backup_file_path)
+    algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
+    algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
 
     bestSol = algo.run(ils_iteration, ls_iteration)
 
