@@ -25,7 +25,7 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from macop.algorithms.IteratedLocalSearch import IteratedLocalSearch as ILS
+from macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
 from macop.solutions.BinarySolution import BinarySolution
 
 from macop.operators.mutators.SimpleMutation import SimpleMutation
