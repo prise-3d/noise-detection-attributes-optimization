@@ -160,9 +160,9 @@ def main():
 
     # prepare optimization algorithm
     operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
-    policy = UCBPolicy(updators)
+    policy = UCBPolicy(operators)
 
-    algo = ILS(init, evaluate, updators, policy, validator, True)
+    algo = ILS(init, evaluate, operators, policy, validator, True)
     algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
     algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
 
