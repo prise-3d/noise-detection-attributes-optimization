@@ -34,8 +34,8 @@ from macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
 
 from macop.operators.policies.UCBPolicy import UCBPolicy
 
-from macop.checkpoints.BasicCheckpoint import BasicCheckpoint
-from macop.checkpoints.UCBCheckpoint import UCBCheckpoint
+from macop.callbacks.BasicCheckpoint import BasicCheckpoint
+from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
