@@ -8,6 +8,8 @@ from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
 from sklearn.metrics import accuracy_score
 from thundersvm import SVC
+from sklearn.model_selection import KFold, cross_val_score
+            
 
 # variables and parameters
 n_predict = 0
@@ -57,6 +59,7 @@ def _get_best_gpu_model(X_train, y_train):
     bestScore = 0.
 
     n_eval = 1
+    k_fold = KFold(n_splits=5)
 
     for c in Cs:
         for g in gammas:
@@ -64,14 +67,14 @@ def _get_best_gpu_model(X_train, y_train):
             svc = SVC(probability=True, class_weight='balanced', kernel='rbf', gamma=g, C=c)
             svc.fit(X_train, y_train)
 
-            score = svc.score(X_train, y_train)
+            score = cross_val_score(svc, X_train, y_train, cv=k_fold, n_jobs=-1)
 
             # keep track of best model
             if score > bestScore:
                 bestScore = score
                 bestModel = svc
 
-            print('Eval n° {} [C: {}, gamma: {}] => [score: {}, bestScore:{}]'.format(n_eval, c, g, score, bestScore))
+            print('Eval n° {} [C: {}, gamma: {}] => [score: {}, bestScore: {}]'.format(n_eval, c, g, score, bestScore))
             n_eval += 1
 
     return bestModel
