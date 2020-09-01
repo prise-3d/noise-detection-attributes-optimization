@@ -40,8 +40,8 @@ from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
-number_of_values    = 26
-ils_iteration       = 2000
+number_of_values    = 30
+ils_iteration       = 4000
 ls_iteration        = 10
 
 # default validator
@@ -120,7 +120,8 @@ def main():
 
     # init solution (`n` attributes)
     def init():
-        return BinarySolution([], number_of_values).random(validator)
+        return BinarySolution([], 30
+        ).random(validator)
 
     # define evaluate function here (need of data information)
     def evaluate(solution):
@@ -163,6 +164,7 @@ def main():
     policy = UCBPolicy(operators)
 
     algo = ILS(init, evaluate, operators, policy, validator, True)
+    
     algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
     algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
 
