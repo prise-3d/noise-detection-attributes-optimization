@@ -54,20 +54,25 @@ def _get_best_gpu_model(X_train, y_train):
     gammas = [0.001, 0.01, 0.1, 5, 10, 100]
 
     bestModel = None
-    modelScore = 0.
+    bestScore = 0.
+
+    n_eval = 1
 
     for c in Cs:
         for g in gammas:
 
-            print('C:', c, ', gamma:', g)
             svc = SVC(probability=True, class_weight='balanced', kernel='rbf', gamma=g, C=c)
             svc.fit(X_train, y_train)
 
             score = svc.score(X_train, y_train)
 
-            if score > modelScore:
-                modelScore = score
+            # keep track of best model
+            if score > bestScore:
+                bestScore = score
                 bestModel = svc
+
+            print('Eval n° {} [C: {}, gamma: {}] => [score: {}, bestScore:{}]'.format(n_eval, c, g, score, bestScore))
+            n_eval += 1
 
     return bestModel
 
