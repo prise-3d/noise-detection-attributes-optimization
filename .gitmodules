@@ -1,3 +1,6 @@
 [submodule "modules"]
 	path = modules
 	url = https://github.com/prise-3d/Thesis-CommonModules.git
+[submodule "macop"]
+	path = macop
+	url = https://github.com/jbuisine/macop.git

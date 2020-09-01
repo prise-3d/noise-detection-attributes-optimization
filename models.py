@@ -41,12 +41,12 @@ def svm_model(X_train, y_train):
 
 def _get_best_gpu_model(X_train, y_train):
 
-    Cs = [0.001, 0.01, 0.1, 1, 2, 5, 10, 100, 1000]
-    gammas = [0.001, 0.01, 0.1, 1, 2, 5, 10, 100]
+    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    gammas = [0.001, 0.01, 0.1, 5, 10, 100]
     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
     svc = SVC(probability=True, class_weight='balanced')
-    clf = GridSearchCV(svc, param_grid, cv=10, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 
