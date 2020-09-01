@@ -41,18 +41,35 @@ def svm_model(X_train, y_train):
 
 def _get_best_gpu_model(X_train, y_train):
 
+    # Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    # gammas = [0.001, 0.01, 0.1, 5, 10, 100]
+    # param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
+
+    # svc = SVC(probability=True, class_weight='balanced')
+    # clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+
+    # clf.fit(X_train, y_train)
+
     Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
     gammas = [0.001, 0.01, 0.1, 5, 10, 100]
-    param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
-    svc = SVC(probability=True, class_weight='balanced')
-    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    bestModel = None
+    modelScore = 0.
 
-    clf.fit(X_train, y_train)
+    for c in Cs:
+        for g in gammas:
 
-    model = clf.best_estimator_
+            print('C:', c, ', gamma:', g)
+            svc = SVC(probability=True, class_weight='balanced', kernel='rbf', gamma=g, C=c)
+            svc.fit(X_train, y_train)
 
-    return model
+            score = svc.score(X_train, y_train)
+
+            if score > modelScore:
+                modelScore = score
+                bestModel = svc
+
+    return bestModel
 
 def svm_gpu(X_train, y_train):
 
