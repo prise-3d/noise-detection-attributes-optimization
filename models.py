@@ -46,42 +46,19 @@ def svm_model(X_train, y_train):
 
 def _get_best_gpu_model(X_train, y_train):
 
-    # Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-    # gammas = [0.001, 0.01, 0.1, 5, 10, 100]
-    # param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
-
-    # svc = SVC(probability=True, class_weight='balanced')
-    # clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-
-    # clf.fit(X_train, y_train)
-
     Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
     gammas = [0.001, 0.01, 0.1, 5, 10, 100]
+    param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
-    bestModel = None
-    bestScore = 0.
+    svc = SVC(probability=True, class_weight='balanced')
+    #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
 
-    n_eval = 1
-    k_fold = KFold(n_splits=5)
+    clf.fit(X_train, y_train)
 
-    for c in Cs:
-        for g in gammas:
+    model = clf.best_estimator_
 
-            svc = SVC(probability=True, class_weight='balanced', kernel='rbf', gamma=g, C=c)
-            svc.fit(X_train, y_train)
-
-            score = cross_val_score(svc, X_train, y_train, cv=k_fold, n_jobs=-1)
-            score = np.mean(score)
-
-            # keep track of best model
-            if score > bestScore:
-                bestScore = score
-                bestModel = svc
-
-            print('Eval n° {} [C: {}, gamma: {}] => [score: {}, bestScore: {}]'.format(n_eval, c, g, score, bestScore))
-            n_eval += 1
-
-    return bestModel
+    return model
 
 def svm_gpu(X_train, y_train):
 
