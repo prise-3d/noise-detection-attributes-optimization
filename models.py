@@ -1,4 +1,6 @@
 # models imports
+import numpy as np
+
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
@@ -8,16 +10,18 @@ from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
 from sklearn.metrics import accuracy_score
 from thundersvm import SVC
+from sklearn.model_selection import KFold, cross_val_score
+            
 
 # variables and parameters
 n_predict = 0
 
-def my_accuracy_scorer(*args):
-        global n_predict
-        score = accuracy_score(*args)
-        print('{0} - Score is {1}'.format(n_predict, score))
-        n_predict += 1
-        return score
+# def my_accuracy_scorer(*args):
+#         global n_predict
+#         score = accuracy_score(*args)
+#         print('{0} - Score is {1}'.format(n_predict, score))
+#         n_predict += 1
+#         return score
 
 def _get_best_model(X_train, y_train):
 
@@ -26,7 +30,8 @@ def _get_best_model(X_train, y_train):
     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
     svc = svm.SVC(probability=True, class_weight='balanced')
-    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 
@@ -41,12 +46,13 @@ def svm_model(X_train, y_train):
 
 def _get_best_gpu_model(X_train, y_train):
 
-    Cs = [0.001, 0.01, 0.1, 1, 2, 5, 10, 100, 1000]
-    gammas = [0.001, 0.01, 0.1, 1, 2, 5, 10, 100]
+    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    gammas = [0.001, 0.01, 0.1, 5, 10, 100]
     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
     svc = SVC(probability=True, class_weight='balanced')
-    clf = GridSearchCV(svc, param_grid, cv=10, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 

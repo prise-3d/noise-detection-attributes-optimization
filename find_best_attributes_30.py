@@ -25,22 +25,24 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from optimization.algorithms.IteratedLocalSearch import IteratedLocalSearch as ILS
-from optimization.solutions.BinarySolution import BinarySolution
+from macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
+from macop.solutions.BinarySolution import BinarySolution
 
-from optimization.operators.mutators.SimpleMutation import SimpleMutation
-from optimization.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
-from optimization.operators.crossovers.SimpleCrossover import SimpleCrossover
+from macop.operators.mutators.SimpleMutation import SimpleMutation
+from macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
+from macop.operators.crossovers.SimpleCrossover import SimpleCrossover
+from macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
 
-from optimization.operators.policies.RandomPolicy import RandomPolicy
+from macop.operators.policies.UCBPolicy import UCBPolicy
 
-from optimization.checkpoints.BasicCheckpoint import BasicCheckpoint
+from macop.callbacks.BasicCheckpoint import BasicCheckpoint
+from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
-number_of_values    = 26
-ils_iteration       = 10
-ls_iteration        = 5
+number_of_values    = 30
+ils_iteration       = 4000
+ls_iteration        = 10
 
 # default validator
 def validator(solution):
@@ -116,6 +118,11 @@ def main():
 
     logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
 
+    # init solution (`n` attributes)
+    def init():
+        return BinarySolution([], 30
+        ).random(validator)
+
     # define evaluate function here (need of data information)
     def evaluate(solution):
 
@@ -146,21 +153,20 @@ def main():
 
         return test_roc_auc
 
-    # init solution (`n` attributes)
-    def init():
-        return BinarySolution([], number_of_values).random(validator)
-
     if not os.path.exists(cfg.output_backup_folder):
         os.makedirs(cfg.output_backup_folder)
 
     backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '.csv')
+    ucb_backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '_ucbPolicy.csv')
 
     # prepare optimization algorithm
-    updators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover()]
-    policy = RandomPolicy(updators)
+    operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
+    policy = UCBPolicy(operators)
 
-    algo = ILS(init, evaluate, updators, policy, validator, True)
-    algo.addCheckpoint(_class=BasicCheckpoint, _every=1, _filepath=backup_file_path)
+    algo = ILS(init, evaluate, operators, policy, validator, True)
+    
+    algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
+    algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
 
     bestSol = algo.run(ils_iteration, ls_iteration)
 

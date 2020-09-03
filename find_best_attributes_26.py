@@ -5,6 +5,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import logging
+import datetime
 
 # model imports
 from sklearn.model_selection import train_test_split
@@ -12,9 +13,9 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
+import joblib
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.externals import joblib
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
@@ -24,24 +25,24 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from macop.macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
-from macop.macop.solutions.BinarySolution import BinarySolution
+from macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
+from macop.solutions.BinarySolution import BinarySolution
 
-from macop.macop.operators.mutators.SimpleMutation import SimpleMutation
-from macop.macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
-from macop.macop.operators.crossovers.SimpleCrossover import SimpleCrossover
-from macop.macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
+from macop.operators.mutators.SimpleMutation import SimpleMutation
+from macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
+from macop.operators.crossovers.SimpleCrossover import SimpleCrossover
+from macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
 
-from macop.macop.operators.policies.UCBPolicy import UCBPolicy
+from macop.operators.policies.UCBPolicy import UCBPolicy
 
-from macop.macop.callbacks.BasicCheckpoint import BasicCheckpoint
-from macop.macop.callbacks.UCBCheckpoint import UCBCheckpoint
+from macop.callbacks.BasicCheckpoint import BasicCheckpoint
+from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
 number_of_values    = 26
-ils_iteration       = 10000
-ls_iteration        = 20
+ils_iteration       = 4000
+ls_iteration        = 10
 
 # default validator
 def validator(solution):
@@ -50,10 +51,6 @@ def validator(solution):
         return False
 
     return True
-
-# init solution (13 filters)
-def init():
-    return BinarySolution([], 13).random(validator)
 
 def loadDataset(filename):
 
@@ -76,6 +73,7 @@ def loadDataset(filename):
     not_noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 0]
     #nb_noisy_test = len(noisy_df_test.index)
 
+    # use of all data
     final_df_train = pd.concat([not_noisy_df_train, noisy_df_train])
     final_df_test = pd.concat([not_noisy_df_test, noisy_df_test])
 
@@ -96,13 +94,20 @@ def main():
 
     parser = argparse.ArgumentParser(description="Train and find best filters to use for model")
 
-    parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)')
-    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list)
+    parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)', required=True)
+    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, required=True)
+    parser.add_argument('--length', type=str, help='max data length (need to be specify for evaluator)', required=True)
 
     args = parser.parse_args()
 
     p_data_file = args.data
     p_choice    = args.choice
+    p_length    = args.length
+
+    global number_of_values
+    number_of_values = p_length
+
+    print(p_data_file)
 
     # load data from file
     x_train, y_train, x_test, y_test = loadDataset(p_data_file)
@@ -111,28 +116,40 @@ def main():
     if not os.path.exists(cfg.output_logs_folder):
         os.makedirs(cfg.output_logs_folder)
 
-    logging.basicConfig(format='%(asctime)s %(message)s', filename='logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
+
+    # init solution (`n` attributes)
+    def init():
+        return BinarySolution([], 26
+        ).random(validator)
 
     # define evaluate function here (need of data information)
     def evaluate(solution):
 
+        start = datetime.datetime.now()
         # get indices of filters data to use (filters selection from solution)
         indices = []
 
         for index, value in enumerate(solution.data): 
             if value == 1: 
-                indices.append(index*2) 
-                indices.append(index*2+1) 
+                indices.append(index) 
 
         # keep only selected filters from solution
         x_train_filters = x_train.iloc[:, indices]
         y_train_filters = y_train
         x_test_filters = x_test.iloc[:, indices]
 
+        # TODO : use of GPU implementation of SVM
         model = mdl.get_trained_model(p_choice, x_train_filters, y_train_filters)
         
         y_test_model = model.predict(x_test_filters)
         test_roc_auc = roc_auc_score(y_test, y_test_model)
+
+        end = datetime.datetime.now()
+
+        diff = end - start
+
+        print("Evaluation took :", divmod(diff.days * 86400 + diff.seconds, 60))
 
         return test_roc_auc
 
@@ -147,6 +164,7 @@ def main():
     policy = UCBPolicy(operators)
 
     algo = ILS(init, evaluate, operators, policy, validator, True)
+    
     algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
     algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
 
@@ -159,9 +177,19 @@ def main():
     if not os.path.exists(cfg.results_information_folder):
         os.makedirs(cfg.results_information_folder)
 
-    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_filters_result_filename)
+    filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_attributes_result_filename)
 
-    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness())
+    filters_counter = 0
+    # count number of filters
+    for index, item in enumerate(bestSol.data):
+        if index != 0 and index % 2 == 1:
+
+            # if two attributes are used
+            if item == 1 or bestSol.data[index - 1] == 1:
+                filters_counter += 1
+
+
+    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness())
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     
