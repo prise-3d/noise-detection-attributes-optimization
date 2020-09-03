@@ -24,18 +24,18 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
-from macop.solutions.BinarySolution import BinarySolution
+from macop.macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
+from macop.macop.solutions.BinarySolution import BinarySolution
 
-from macop.operators.mutators.SimpleMutation import SimpleMutation
-from macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
-from macop.operators.crossovers.SimpleCrossover import SimpleCrossover
-from macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
+from macop.macop.operators.mutators.SimpleMutation import SimpleMutation
+from macop.macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
+from macop.macop.operators.crossovers.SimpleCrossover import SimpleCrossover
+from macop.macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
 
-from macop.operators.policies.UCBPolicy import UCBPolicy
+from macop.macop.operators.policies.UCBPolicy import UCBPolicy
 
-from macop.callbacks.BasicCheckpoint import BasicCheckpoint
-from macop.callbacks.UCBCheckpoint import UCBCheckpoint
+from macop.macop.callbacks.BasicCheckpoint import BasicCheckpoint
+from macop.macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
@@ -108,8 +108,8 @@ def main():
     x_train, y_train, x_test, y_test = loadDataset(p_data_file)
 
     # create `logs` folder if necessary
-    if not os.path.exists(cfg.logs_folder):
-        os.makedirs(cfg.logs_folder)
+    if not os.path.exists(cfg.output_logs_folder):
+        os.makedirs(cfg.output_logs_folder)
 
     logging.basicConfig(format='%(asctime)s %(message)s', filename='logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
 
