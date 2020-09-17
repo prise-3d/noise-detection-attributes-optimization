@@ -121,7 +121,7 @@ def main():
         test_roc_auc = roc_auc_score(y_test, y_test_model)
         
         with open('data/results/selectFromModel.csv', 'a') as f:
-            line += str(len(binary_selection)) + ';'
+            line = str(len(binary_selection)) + ';'
             line += str(test_roc_auc) + ';'
             
             for index, b in enumerate(binary_selection):
