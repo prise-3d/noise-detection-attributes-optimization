@@ -9,12 +9,12 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_selection import RFECV
 import sklearn.svm as svm
 from sklearn.metrics import accuracy_score
-from thundersvm import SVC
+# from thundersvm import SVC
 from sklearn.model_selection import KFold, cross_val_score
             
 
 # variables and parameters
-n_predict = 0
+# n_predict = 0
 
 # def my_accuracy_scorer(*args):
 #         global n_predict
@@ -44,25 +44,25 @@ def svm_model(X_train, y_train):
     return _get_best_model(X_train, y_train)
 
 
-def _get_best_gpu_model(X_train, y_train):
+# def _get_best_gpu_model(X_train, y_train):
 
-    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-    gammas = [0.001, 0.01, 0.1, 5, 10, 100]
-    param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
+#     Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+#     gammas = [0.001, 0.01, 0.1, 5, 10, 100]
+#     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
-    svc = SVC(probability=True, class_weight='balanced')
-    #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
+#     svc = svm.SVC(probability=True, class_weight='balanced')
+#     #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+#     clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
 
-    clf.fit(X_train, y_train)
+#     clf.fit(X_train, y_train)
 
-    model = clf.best_estimator_
+#     model = clf.best_estimator_
 
-    return model
+#     return model
 
-def svm_gpu(X_train, y_train):
+# def svm_gpu(X_train, y_train):
 
-    return _get_best_gpu_model(X_train, y_train)
+#     return _get_best_gpu_model(X_train, y_train)
 
 
 def ensemble_model(X_train, y_train):
@@ -107,8 +107,8 @@ def get_trained_model(choice, X_train, y_train):
     if choice == 'svm_model':
         return svm_model(X_train, y_train)
 
-    if choice == 'svm_gpu':
-        return svm_gpu(X_train, y_train)
+    # if choice == 'svm_gpu':
+        # return svm_gpu(X_train, y_train)
 
     if choice == 'ensemble_model':
         return ensemble_model(X_train, y_train)
