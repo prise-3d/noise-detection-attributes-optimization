@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import logging
 import datetime
+import random
 
 # model imports
 from sklearn.model_selection import train_test_split
@@ -25,7 +26,7 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from macop.algorithms.mono.IteratedLocalSearch import IteratedLocalSearch as ILS
+from optimization.ILSSurrogate import ILSSurrogate
 from macop.solutions.BinarySolution import BinarySolution
 
 from macop.operators.mutators.SimpleMutation import SimpleMutation
@@ -40,13 +41,11 @@ from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
 # variables and parameters
 models_list         = cfg.models_names_list
-number_of_values    = 30
-ils_iteration       = 4000
-ls_iteration        = 10
 
 # default validator
 def validator(solution):
 
+    # at least 5 attributes
     if list(solution.data).count(1) < 5:
         return False
 
@@ -96,16 +95,21 @@ def main():
 
     parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)', required=True)
     parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, required=True)
-    parser.add_argument('--length', type=str, help='max data length (need to be specify for evaluator)', required=True)
+    parser.add_argument('--length', type=int, help='max data length (need to be specify for evaluator)', required=True)
+    parser.add_argument('--surrogate', type=str, help='surrogate .joblib model to approximate fitness', required=True)
+    parser.add_argument('--solutions', type=str, help='solutions files required to find surrogate model', required=True)
+    parser.add_argument('--ils', type=int, help='number of total iteration for ils algorithm', required=True)
+    parser.add_argument('--ls', type=int, help='number of iteration for Local Search algorithm', required=True)
 
     args = parser.parse_args()
 
     p_data_file = args.data
     p_choice    = args.choice
     p_length    = args.length
-
-    global number_of_values
-    number_of_values = p_length
+    p_surrogate = args.surrogate
+    p_solutions = args.solutions
+    p_ils_iteration = args.ils
+    p_ls_iteration  = args.ls
 
     print(p_data_file)
 
@@ -116,17 +120,19 @@ def main():
     if not os.path.exists(cfg.output_logs_folder):
         os.makedirs(cfg.output_logs_folder)
 
-    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/%s.log' % p_data_file.split('/')[-1], level=logging.DEBUG)
+    _, data_file_name = os.path.split(p_data_file)
+    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/{0}.log'.format(data_file_name), level=logging.DEBUG)
 
     # init solution (`n` attributes)
     def init():
-        return BinarySolution([], 30
+        return BinarySolution([], p_length
         ).random(validator)
 
     # define evaluate function here (need of data information)
-    def evaluate(solution):
+    def evaluate(solution, use_surrogate=True):
 
         start = datetime.datetime.now()
+
         # get indices of filters data to use (filters selection from solution)
         indices = []
 
@@ -138,7 +144,7 @@ def main():
         x_train_filters = x_train.iloc[:, indices]
         y_train_filters = y_train
         x_test_filters = x_test.iloc[:, indices]
-
+        
         # TODO : use of GPU implementation of SVM
         model = mdl.get_trained_model(p_choice, x_train_filters, y_train_filters)
         
@@ -149,26 +155,39 @@ def main():
 
         diff = end - start
 
-        print("Evaluation took :", divmod(diff.days * 86400 + diff.seconds, 60))
+        print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
 
         return test_roc_auc
 
-    if not os.path.exists(cfg.output_backup_folder):
-        os.makedirs(cfg.output_backup_folder)
 
-    backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '.csv')
-    ucb_backup_file_path = os.path.join(cfg.output_backup_folder, p_data_file.split('/')[-1] + '_ucbPolicy.csv')
+    backup_model_folder = os.path.join(cfg.output_backup_folder, data_file_name)
+
+    if not os.path.exists(backup_model_folder):
+        os.makedirs(backup_model_folder)
+
+    backup_file_path = os.path.join(backup_model_folder, data_file_name + '.csv')
+    ucb_backup_file_path = os.path.join(backup_model_folder, data_file_name + '_ucbPolicy.csv')
 
     # prepare optimization algorithm
     operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
     policy = UCBPolicy(operators)
 
-    algo = ILS(init, evaluate, operators, policy, validator, True)
+    # custom ILS for surrogate use
+    algo = ILSSurrogate(_initalizer=init, 
+                        _evaluator=None, # by default no evaluator, as we will use the surrogate function
+                        _operators=operators, 
+                        _policy=policy, 
+                        _validator=validator,
+                        _surrogate_file_path=p_surrogate,
+                        _solutions_file=p_solutions,
+                        _ls_train_surrogate=1,
+                        _real_evaluator=evaluate,
+                        _maximise=True)
     
     algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
     algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
 
-    bestSol = algo.run(ils_iteration, ls_iteration)
+    bestSol = algo.run(p_ils_iteration, p_ls_iteration)
 
     # print best solution found
     print("Found ", bestSol)
@@ -189,7 +208,7 @@ def main():
                 filters_counter += 1
 
 
-    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness())
+    line_info = p_data_file + ';' + str(p_ils_iteration) + ';' + str(p_ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness())
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     

@@ -1,3 +1,6 @@
 [submodule "modules"]
 	path = modules
 	url = https://github.com/prise-3d/Thesis-CommonModules.git
+[submodule "wsao"]
+	path = wsao
+	url = https://gitlab.com/jbuisine/wsao.git
