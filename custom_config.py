@@ -6,7 +6,6 @@ import os
 context_vars = vars()
 
 # folders
-
 output_data_folder              = 'data'
 output_data_generated           = os.path.join(output_data_folder, 'generated')
 output_datasets                 = os.path.join(output_data_folder, 'datasets')
@@ -15,6 +14,11 @@ output_models                   = os.path.join(output_data_folder, 'saved_models
 output_results_folder           = os.path.join(output_data_folder, 'results')
 output_logs_folder              = os.path.join(output_data_folder, 'logs')
 output_backup_folder            = os.path.join(output_data_folder, 'backups')
+output_surrogates_folder        = os.path.join(output_data_folder, 'surrogate')
+
+
+output_surrogates_model_folder  = os.path.join(output_surrogates_folder, 'models')
+output_surrogates_data_folder  = os.path.join(output_surrogates_folder, 'data')
 
 results_information_folder      = os.path.join(output_data_folder, 'results')
 

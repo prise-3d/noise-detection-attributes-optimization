@@ -39,6 +39,8 @@ from macop.operators.policies.UCBPolicy import UCBPolicy
 from macop.callbacks.BasicCheckpoint import BasicCheckpoint
 from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 
+from sklearn.ensemble import RandomForestClassifier
+
 # variables and parameters
 models_list         = cfg.models_names_list
 
@@ -94,22 +96,22 @@ def main():
     parser = argparse.ArgumentParser(description="Train and find best filters to use for model")
 
     parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)', required=True)
-    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, required=True)
+    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, default=models_list[0], required=False)
+    parser.add_argument('--start_surrogate', type=int, help='number of evalution before starting surrogare model', default=1000)
     parser.add_argument('--length', type=int, help='max data length (need to be specify for evaluator)', required=True)
-    parser.add_argument('--surrogate', type=str, help='surrogate .joblib model to approximate fitness', required=True)
-    parser.add_argument('--solutions', type=str, help='solutions files required to find surrogate model', required=True)
     parser.add_argument('--ils', type=int, help='number of total iteration for ils algorithm', required=True)
     parser.add_argument('--ls', type=int, help='number of iteration for Local Search algorithm', required=True)
+    parser.add_argument('--output', type=str, help='output surrogate model name')
 
     args = parser.parse_args()
 
     p_data_file = args.data
     p_choice    = args.choice
     p_length    = args.length
-    p_surrogate = args.surrogate
-    p_solutions = args.solutions
+    p_start     = args.start_surrogate
     p_ils_iteration = args.ils
     p_ls_iteration  = args.ls
+    p_output = args.output
 
     print(p_data_file)
 
@@ -120,8 +122,7 @@ def main():
     if not os.path.exists(cfg.output_logs_folder):
         os.makedirs(cfg.output_logs_folder)
 
-    _, data_file_name = os.path.split(p_data_file)
-    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/{0}.log'.format(data_file_name), level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(message)s', filename='data/logs/{0}.log'.format(p_output), level=logging.DEBUG)
 
     # init solution (`n` attributes)
     def init():
@@ -129,7 +130,7 @@ def main():
         ).random(validator)
 
     # define evaluate function here (need of data information)
-    def evaluate(solution, use_surrogate=True):
+    def evaluate(solution):
 
         start = datetime.datetime.now()
 
@@ -146,7 +147,10 @@ def main():
         x_test_filters = x_test.iloc[:, indices]
         
         # TODO : use of GPU implementation of SVM
-        model = mdl.get_trained_model(p_choice, x_train_filters, y_train_filters)
+        # model = mdl.get_trained_model(p_choice, x_train_filters, y_train_filters)
+
+        model = RandomForestClassifier(n_estimators=10)
+        model = model.fit(x_train_filters, y_train_filters)
         
         y_test_model = model.predict(x_test_filters)
         test_roc_auc = roc_auc_score(y_test, y_test_model)
@@ -160,28 +164,42 @@ def main():
         return test_roc_auc
 
 
-    backup_model_folder = os.path.join(cfg.output_backup_folder, data_file_name)
+    # build all output folder and files based on `output` name
+    backup_model_folder = os.path.join(cfg.output_backup_folder, p_output)
+    surrogate_output_model = os.path.join(cfg.output_surrogates_model_folder, p_output)
+    surrogate_output_data = os.path.join(cfg.output_surrogates_data_folder, p_output)
 
     if not os.path.exists(backup_model_folder):
         os.makedirs(backup_model_folder)
 
-    backup_file_path = os.path.join(backup_model_folder, data_file_name + '.csv')
-    ucb_backup_file_path = os.path.join(backup_model_folder, data_file_name + '_ucbPolicy.csv')
+    if not os.path.exists(cfg.output_surrogates_model_folder):
+        os.makedirs(cfg.output_surrogates_model_folder)
 
-    # prepare optimization algorithm
-    operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
+    if not os.path.exists(cfg.output_surrogates_data_folder):
+        os.makedirs(cfg.output_surrogates_data_folder)
+
+    backup_file_path = os.path.join(backup_model_folder, p_output + '.csv')
+    ucb_backup_file_path = os.path.join(backup_model_folder, p_output + '_ucbPolicy.csv')
+
+    # prepare optimization algorithm (only use of mutation as only ILS are used here, and local search need only local permutation)
+    operators = [SimpleBinaryMutation(), SimpleMutation()]
     policy = UCBPolicy(operators)
+
+    # define first line if necessary
+    if not os.path.exists(surrogate_output_data):
+        with open(surrogate_output_data) as f:
+            f.write('x;y\n')
 
     # custom ILS for surrogate use
     algo = ILSSurrogate(_initalizer=init, 
-                        _evaluator=None, # by default no evaluator, as we will use the surrogate function
+                        _evaluator=evaluate, # same evaluator by defadefaultult, as we will use the surrogate function
                         _operators=operators, 
                         _policy=policy, 
                         _validator=validator,
-                        _surrogate_file_path=p_surrogate,
-                        _solutions_file=p_solutions,
+                        _surrogate_file_path=surrogate_output_model,
+                        _start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
+                        _solutions_file=surrogate_output_data,
                         _ls_train_surrogate=1,
-                        _real_evaluator=evaluate,
                         _maximise=True)
     
     algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))

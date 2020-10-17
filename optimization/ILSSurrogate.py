@@ -8,7 +8,7 @@ import joblib
 
 # module imports
 from macop.algorithms.Algorithm import Algorithm
-from macop.algorithms.mono.LocalSearch import LocalSearch
+from .LSSurrogate import LocalSearchSurrogate
 
 from sklearn.linear_model import (LinearRegression, Lasso, Lars, LassoLars,
                                     LassoCV, ElasticNet)
@@ -33,10 +33,10 @@ class ILSSurrogate(Algorithm):
         bestSolution: {Solution} -- best solution found so far during running algorithm
         ls_iteration: {int} -- number of evaluation for each local search algorithm
         surrogate_file: {str} -- Surrogate model file to load (model trained using https://gitlab.com/florianlprt/wsao)
+        start_train_surrogate: {int} -- number of evaluation expected before start training and use surrogate
         surrogate: {Surrogate} -- Surrogate model instance loaded
         ls_train_surrogate: {int} -- Specify if we need to retrain our surrogate model (every Local Search)
         solutions_file: {str} -- Path where real evaluated solutions are saved in order to train surrogate again
-        real_evaluator: {function} -- real expected evaluation to use
         callbacks: {[Callback]} -- list of Callback class implementation to do some instructions every number of evaluations and `load` when initializing algorithm
     """
     def __init__(self,
@@ -46,21 +46,22 @@ class ILSSurrogate(Algorithm):
                  _policy,
                  _validator,
                  _surrogate_file_path,
+                 _start_train_surrogate,
                  _ls_train_surrogate,
                  _solutions_file,
-                 _real_evaluator,
                  _maximise=True,
                  _parent=None):
 
+        # set real evaluator as default
         super().__init__(_initalizer, _evaluator, _operators, _policy,
                 _validator, _maximise, _parent)
 
         self.n_local_search = 0
 
         self.surrogate_file_path = _surrogate_file_path
-        self.load_surrogate()
+        self.start_train_surrogate = _start_train_surrogate
 
-        self.real_evaluator = _real_evaluator
+        self.surrogate_evaluator = None
 
         self.ls_train_surrogate = _ls_train_surrogate
         self.solutions_file = _solutions_file
@@ -103,8 +104,26 @@ class ILSSurrogate(Algorithm):
         self.surrogate = joblib.load(self.surrogate_file_path)
 
         # update evaluator function
-        self.evaluator = lambda s: self.surrogate.surrogate.predict([s.data])[0]
+        self.surrogate_evaluator = lambda s: self.surrogate.surrogate.predict([s.data])[0]
 
+    def add_to_surrogate(self, solution):
+
+        # save real evaluated solution into specific file for surrogate
+        with open(self.solutions_file, 'a') as f:
+
+            line = ""
+
+            for index, e in enumerate(solution.data):
+
+                line += str(e)
+                
+                if index < len(solution.data) - 1:
+                    line += ","
+
+            line += ";"
+            line += str(solution.score)
+
+            f.write(line + "\n")
 
     def run(self, _evaluations, _ls_evaluations=100):
         """
@@ -124,16 +143,22 @@ class ILSSurrogate(Algorithm):
         # enable resuming for ILS
         self.resume()
 
+        if self.start_train_surrogate < self.getGlobalEvaluation():
+            self.load_surrogate()
+
         # initialize current solution
         self.initRun()
 
         # local search algorithm implementation
         while not self.stop():
+            
+            # set current evaluator based on used or not of surrogate function
+            current_evaluator = self.surrogate_evaluator if self.start_train_surrogate < self.getGlobalEvaluation() else self.evaluator
 
             # create new local search instance
             # passing global evaluation param from ILS
-            ls = LocalSearch(self.initializer,
-                         self.evaluator,
+            ls = LocalSearchSurrogate(self.initializer,
+                         current_evaluator,
                          self.operators,
                          self.policy,
                          self.validator,
@@ -147,12 +172,12 @@ class ILSSurrogate(Algorithm):
             # create and search solution from local search
             newSolution = ls.run(_ls_evaluations)
 
-            # if better solution than currently, replace it
-            if self.isBetter(newSolution):
+            # if better solution than currently, replace it (solution saved in training pool, only if surrogate process is in a second process step)
+            if self.isBetter(newSolution) and self.start_train_surrogate < self.getGlobalEvaluation():
 
                 # if better solution found from local search, retrained the found solution and test again
                 # without use of surrogate
-                fitness_score = self.real_evaluator(newSolution)
+                fitness_score = self.evaluator(newSolution)
                 self.increaseEvaluation()
 
                 newSolution.score = fitness_score
@@ -161,25 +186,11 @@ class ILSSurrogate(Algorithm):
                 if self.isBetter(newSolution):
                     self.bestSolution = newSolution
 
-                # save real evaluated solution into specific file for surrogate
-                with open(self.solutions_file, 'a') as f:
+                self.add_to_surrogate(newSolution)
 
-                    line = ""
-
-                    for index, e in enumerate(newSolution.data):
-
-                        line += str(e)
-                        
-                        if index < len(newSolution.data) - 1:
-                            line += ","
-
-                    line += ";"
-                    line += str(newSolution.score)
-
-                    f.write(line + "\n")
 
             # check if necessary or not to train again surrogate
-            if self.n_local_search % self.ls_train_surrogate == 0:
+            if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate < self.getGlobalEvaluation():
 
                 # train again surrogate on real evaluated solutions file
                 self.train_surrogate()
