@@ -143,8 +143,22 @@ class ILSSurrogate(Algorithm):
         # enable resuming for ILS
         self.resume()
 
-        if self.start_train_surrogate < self.getGlobalEvaluation():
+        if self.start_train_surrogate <= self.getGlobalEvaluation():
             self.load_surrogate()
+        else:
+            # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
+            # using randomly generated solutions (in order to cover seearch space)
+            while self.start_train_surrogate <= self.getGlobalEvaluation():
+                
+                newSolution = self.initializer()
+
+                # evaluate new solution
+                newSolution.evaluate(self.evaluator)
+
+                # add it to surrogate pool
+                self.add_to_surrogate(newSolution)
+
+                self.increaseEvaluation()
 
         # initialize current solution
         self.initRun()
@@ -187,7 +201,6 @@ class ILSSurrogate(Algorithm):
                     self.bestSolution = newSolution
 
                 self.add_to_surrogate(newSolution)
-
 
             # check if necessary or not to train again surrogate
             if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate < self.getGlobalEvaluation():
