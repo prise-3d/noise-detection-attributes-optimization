@@ -143,7 +143,7 @@ class ILSSurrogate(Algorithm):
         # enable resuming for ILS
         self.resume()
 
-        if self.start_train_surrogate <= self.getGlobalEvaluation():
+        if self.start_train_surrogate > self.getGlobalEvaluation():
         
             # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
             # using randomly generated solutions (in order to cover seearch space)
