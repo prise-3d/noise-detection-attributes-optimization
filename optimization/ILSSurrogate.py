@@ -159,6 +159,8 @@ class ILSSurrogate(Algorithm):
 
                 self.increaseEvaluation()
         
+        # train surrogate on real evaluated solutions file
+        self.train_surrogate()
         self.load_surrogate()
 
         # initialize current solution
