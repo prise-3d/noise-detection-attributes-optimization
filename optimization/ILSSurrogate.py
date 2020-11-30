@@ -147,7 +147,7 @@ class ILSSurrogate(Algorithm):
         
             # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
             # using randomly generated solutions (in order to cover seearch space)
-            while self.start_train_surrogate <= self.getGlobalEvaluation():
+            while self.start_train_surrogate > self.getGlobalEvaluation():
                 
                 newSolution = self.initializer()
 
