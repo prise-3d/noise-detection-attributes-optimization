@@ -143,6 +143,9 @@ class ILSSurrogate(Algorithm):
         # enable resuming for ILS
         self.resume()
 
+        # initialize current solution
+        self.initRun()
+
         if self.start_train_surrogate > self.getGlobalEvaluation():
         
             # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
@@ -158,9 +161,6 @@ class ILSSurrogate(Algorithm):
                 self.add_to_surrogate(newSolution)
 
                 self.increaseEvaluation()
-
-        # initialize current solution
-        self.initRun()
 
         # train surrogate on real evaluated solutions file
         self.train_surrogate()
