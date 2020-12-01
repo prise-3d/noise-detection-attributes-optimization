@@ -158,13 +158,13 @@ class ILSSurrogate(Algorithm):
                 self.add_to_surrogate(newSolution)
 
                 self.increaseEvaluation()
-        
-        # train surrogate on real evaluated solutions file
-        self.train_surrogate()
-        self.load_surrogate()
 
         # initialize current solution
         self.initRun()
+
+        # train surrogate on real evaluated solutions file
+        self.train_surrogate()
+        self.load_surrogate()
 
         # local search algorithm implementation
         while not self.stop():
