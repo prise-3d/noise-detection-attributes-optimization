@@ -59,7 +59,6 @@ class LocalSearchSurrogate(Algorithm):
                 # increase number of evaluations
                 self.increaseEvaluation()
 
-                self.progress()
                 logging.info("---- Current %s - SCORE %s" %
                              (newSolution, newSolution.fitness()))
 

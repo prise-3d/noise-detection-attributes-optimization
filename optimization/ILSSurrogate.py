@@ -140,11 +140,11 @@ class ILSSurrogate(Algorithm):
         # by default use of mother method to initialize variables
         super().run(_evaluations)
 
-        # enable resuming for ILS
-        self.resume()
-
         # initialize current solution
         self.initRun()
+
+        # enable resuming for ILS
+        self.resume()
 
         if self.start_train_surrogate > self.getGlobalEvaluation():
         
@@ -206,6 +206,8 @@ class ILSSurrogate(Algorithm):
                     self.bestSolution = newSolution
 
                 self.add_to_surrogate(newSolution)
+
+                self.progress()
 
             # check if necessary or not to train again surrogate
             if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate < self.getGlobalEvaluation():
