@@ -170,7 +170,7 @@ class ILSSurrogate(Algorithm):
         while not self.stop():
             
             # set current evaluator based on used or not of surrogate function
-            current_evaluator = self.surrogate_evaluator if self.start_train_surrogate < self.getGlobalEvaluation() else self.evaluator
+            current_evaluator = self.surrogate_evaluator if self.start_train_surrogate <= self.getGlobalEvaluation() else self.evaluator
 
             # create new local search instance
             # passing global evaluation param from ILS
@@ -192,12 +192,12 @@ class ILSSurrogate(Algorithm):
             # if better solution than currently, replace it (solution saved in training pool, only if surrogate process is in a second process step)
             # Update : always add new solution into surrogate pool, not only if solution is better
             #if self.isBetter(newSolution) and self.start_train_surrogate < self.getGlobalEvaluation():
-            if self.start_train_surrogate < self.getGlobalEvaluation():
+            if self.start_train_surrogate <= self.getGlobalEvaluation():
 
                 # if better solution found from local search, retrained the found solution and test again
                 # without use of surrogate
                 fitness_score = self.evaluator(newSolution)
-                self.increaseEvaluation()
+                # self.increaseEvaluation() # dot not add evaluation
 
                 newSolution.score = fitness_score
 
@@ -210,7 +210,7 @@ class ILSSurrogate(Algorithm):
                 self.progress()
 
             # check if necessary or not to train again surrogate
-            if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate < self.getGlobalEvaluation():
+            if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate <= self.getGlobalEvaluation():
 
                 # train again surrogate on real evaluated solutions file
                 self.train_surrogate()
@@ -228,3 +228,18 @@ class ILSSurrogate(Algorithm):
 
         self.end()
         return self.bestSolution
+
+    def addCallback(self, _callback):
+        """Add new callback to algorithm specifying usefull parameters
+
+        Args:
+            _callback: {Callback} -- specific Callback instance
+        """
+        # specify current main algorithm reference
+        if self.parent is not None:
+            _callback.setAlgo(self.parent)
+        else:
+            _callback.setAlgo(self)
+
+        # set as new
+        self.callbacks.append(_callback)

@@ -59,6 +59,8 @@ class LocalSearchSurrogate(Algorithm):
                 # increase number of evaluations
                 self.increaseEvaluation()
 
+                self.progress()
+
                 logging.info("---- Current %s - SCORE %s" %
                              (newSolution, newSolution.fitness()))
 
@@ -74,3 +76,18 @@ class LocalSearchSurrogate(Algorithm):
                      (type(self).__name__, self.bestSolution))
 
         return self.bestSolution
+
+    def addCallback(self, _callback):
+        """Add new callback to algorithm specifying usefull parameters
+
+        Args:
+            _callback: {Callback} -- specific Callback instance
+        """
+        # specify current main algorithm reference
+        if self.parent is not None:
+            _callback.setAlgo(self.parent)
+        else:
+            _callback.setAlgo(self)
+
+        # set as new
+        self.callbacks.append(_callback)
