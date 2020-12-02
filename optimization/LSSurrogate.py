@@ -36,8 +36,9 @@ class LocalSearchSurrogate(Algorithm):
         # by default use of mother method to initialize variables
         super().run(_evaluations)
 
-        if self.parent:
-            self.bestSolution = self.parent.bestSolution
+        # do not use here the best solution known (default use of initRun and current solution)
+        # if self.parent:
+        #     self.bestSolution = self.parent.bestSolution
 
         # initialize current solution
         self.initRun()
@@ -71,6 +72,9 @@ class LocalSearchSurrogate(Algorithm):
                 # stop algorithm if necessary
                 if self.stop():
                     break
+
+            # after applying local search on currentSolution, we switch into new local area using known current bestSolution
+            self.currentSolution = self.bestSolution
 
         logging.info("End of %s, best solution found %s" %
                      (type(self).__name__, self.bestSolution))
