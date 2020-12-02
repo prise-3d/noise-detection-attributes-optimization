@@ -190,7 +190,9 @@ class ILSSurrogate(Algorithm):
             newSolution = ls.run(_ls_evaluations)
 
             # if better solution than currently, replace it (solution saved in training pool, only if surrogate process is in a second process step)
-            if self.isBetter(newSolution) and self.start_train_surrogate < self.getGlobalEvaluation():
+            # Update : always add new solution into surrogate pool, not only if solution is better
+            #if self.isBetter(newSolution) and self.start_train_surrogate < self.getGlobalEvaluation():
+            if self.start_train_surrogate < self.getGlobalEvaluation():
 
                 # if better solution found from local search, retrained the found solution and test again
                 # without use of surrogate
