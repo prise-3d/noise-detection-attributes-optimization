@@ -22,19 +22,19 @@ class LocalSearchSurrogate(Algorithm):
         bestSolution: {Solution} -- best solution found so far during running algorithm
         callbacks: {[Callback]} -- list of Callback class implementation to do some instructions every number of evaluations and `load` when initializing algorithm
     """
-    def run(self, _evaluations):
+    def run(self, evaluations):
         """
         Run the local search algorithm
 
         Args:
-            _evaluations: {int} -- number of Local search evaluations
+            evaluations: {int} -- number of Local search evaluations
             
         Returns:
             {Solution} -- best solution found
         """
 
         # by default use of mother method to initialize variables
-        super().run(_evaluations)
+        super().run(evaluations)
 
         # do not use here the best solution known (default use of initRun and current solution)
         # if self.parent:
@@ -66,8 +66,8 @@ class LocalSearchSurrogate(Algorithm):
                              (newSolution, newSolution.fitness()))
 
                 # add to surrogate pool file if necessary (using ILS parent reference)
-                if self.parent.start_train_surrogate >= self.getGlobalEvaluation():
-                    self.parent.add_to_surrogate(newSolution)
+                # if self.parent.start_train_surrogate >= self.getGlobalEvaluation():
+                #     self.parent.add_to_surrogate(newSolution)
 
                 # stop algorithm if necessary
                 if self.stop():
@@ -81,17 +81,17 @@ class LocalSearchSurrogate(Algorithm):
 
         return self.bestSolution
 
-    def addCallback(self, _callback):
+    def addCallback(self, callback):
         """Add new callback to algorithm specifying usefull parameters
 
         Args:
-            _callback: {Callback} -- specific Callback instance
+            callback: {Callback} -- specific Callback instance
         """
         # specify current main algorithm reference
         if self.parent is not None:
-            _callback.setAlgo(self.parent)
+            callback.setAlgo(self.parent)
         else:
-            _callback.setAlgo(self)
+            callback.setAlgo(self)
 
         # set as new
-        self.callbacks.append(_callback)
+        self.callbacks.append(callback)
