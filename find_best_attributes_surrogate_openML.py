@@ -61,13 +61,13 @@ def train_model(X_train, y_train):
 
     print ('Creating model...')
     # here use of SVM with grid search CV
-    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-    gammas = [0.001, 0.01, 0.1, 5, 10, 100]
+    Cs = [0.001, 0.01, 0.1, 1, 10, 100]
+    gammas = [0.001, 0.01, 0.1,10, 100]
     param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
 
     svc = svm.SVC(probability=True, class_weight='balanced')
     #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=4, verbose=1, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 
@@ -204,7 +204,7 @@ def main():
 
 
     # custom start surrogate variable based on problem size
-    p_start = int(problem_size)
+    p_start = int(0.5 * problem_size)
     print(f'Starting using surrogate after {p_start} reals training')
 
     # custom ILS for surrogate use
