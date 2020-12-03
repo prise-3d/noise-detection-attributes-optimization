@@ -77,8 +77,6 @@ def train_model(X_train, y_train):
 
 def loadDataset(filename):
 
-    # TODO : load data using DL RNN 
-
     ########################
     # 1. Get and prepare data
     ########################
