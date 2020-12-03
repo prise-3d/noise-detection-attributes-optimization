@@ -4,3 +4,6 @@
 [submodule "wsao"]
 	path = wsao
 	url = https://gitlab.com/jbuisine/wsao.git
+[submodule "rnn"]
+	path = rnn
+	url = https://github.com/prise-3d/LSTM-noise-detection.git
