@@ -153,6 +153,15 @@ class ILSSurrogate(Algorithm):
         # enable resuming for ILS
         self.resume()
 
+        # count number of surrogate obtained and restart using real evaluations done
+        nsamples = None
+        with open(self.solutions_file, 'r') as f:
+            nsamples = len(f.readlines()) - 1 # avoid header
+
+        if self.getGlobalEvaluation() < nsamples:
+            print(f'Restart using {nsamples} of {self.start_train_surrogate} real evaluations obtained')
+            self.numberOfEvaluations = nsamples
+
         if self.start_train_surrogate > self.getGlobalEvaluation():
         
             # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
