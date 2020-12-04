@@ -80,7 +80,7 @@ class ILSSurrogate(Algorithm):
 
         problem = ND3DProblem(size=len(self.bestSolution.data)) # problem size based on best solution size (need to improve...)
         model = Lasso(alpha=1e-5)
-        surrogate = WalshSurrogate(order=3, size=problem.size, model=model)
+        surrogate = WalshSurrogate(order=2, size=problem.size, model=model)
         analysis = FitterAnalysis(logfile="train_surrogate.log", problem=problem)
 
         algo = FitterAlgo(problem=problem, surrogate=surrogate, analysis=analysis, seed=problem.seed)
@@ -88,7 +88,7 @@ class ILSSurrogate(Algorithm):
         print("Start fitting again the surrogate model")
         for r in range(10):
             print("Iteration n°{0}: for fitting surrogate".format(r))
-            algo.run(samplefile=self.solutions_file, sample=100, step=10)
+            algo.run(samplefile=self.solutions_file, sample=1000, step=10)
 
         joblib.dump(algo, self.surrogate_file_path)
 
