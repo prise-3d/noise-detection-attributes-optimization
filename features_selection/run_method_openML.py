@@ -81,19 +81,23 @@ def main():
     # load data from file and get problem size
     X_train, y_train, X_test, y_test, problem_size = loadDataset(p_data_file)
 
+    # extract indices selected features
     features_indices = features_selection_method(p_method, p_params, X_train, y_train, problem_size)
 
     print(f'Selected features {len(features_indices)} over {problem_size}')
-
-    # get reduced dataset
-    X_train_reduced = X_train[:, features_indices]
-    X_test_reduced = X_test[:, features_indices]
-
 
     auc_scores = []
     acc_scores = []
     
     for i in range(p_ntrain):
+
+        # new split of dataset
+        X_train, y_train, X_test, y_test, problem_size = loadDataset(p_data_file)
+
+        # get reduced dataset
+        X_train_reduced = X_train[:, features_indices]
+        X_test_reduced = X_test[:, features_indices]
+
 
         # get trained model over reduce dataset
         model = train_model(X_train_reduced, y_train)
@@ -113,11 +117,17 @@ def main():
     mean_auc_score = sum(auc_scores) / len(auc_scores)
     mean_acc_score = sum(acc_scores) / len(acc_scores)
 
+    var_acc_score = np.var(acc_scores)
+    var_auc_score = np.var(auc_scores)
+
+    std_acc_score = np.std(acc_scores)
+    std_auc_score = np.std(auc_scores)
+
     print(f'Model performance using {p_method} (params: {p_params}) is of {mean_auc_score:.2f}')
 
     # now save trained model and params obtained
-    header_line = 'dataset;method;params;ntrain;n_features;acc_test;auc_test;features_indices\n'
-    data_line = f'{p_data_file};{p_method};{p_params};{p_ntrain};{len(features_indices)};{mean_acc_score};{mean_auc_score};{" ".join(list(map(str, features_indices)))}\n'
+    header_line = 'dataset;method;params;ntrain;n_features;acc_test;auc_test;var_acc_test;var_auc_test;std_acc_test;std_auc_test;features_indices\n'
+    data_line = f'{p_data_file};{p_method};{p_params};{p_ntrain};{len(features_indices)};{mean_acc_score};{mean_auc_score};{var_acc_score};{var_auc_score};{std_acc_score};{std_auc_score};{" ".join(list(map(str, features_indices)))}\n'
 
     output_folder, _ = os.path.split(p_output)
 
