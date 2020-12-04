@@ -14,7 +14,7 @@ def main():
     p_ils = args.ils
     p_ls  = args.ls
 
-    open_ml_problems = os.listdir(open_ml_problems_folder)
+    open_ml_problems = sorted(os.listdir(open_ml_problems_folder))
 
     for ml_problem in open_ml_problems:
 

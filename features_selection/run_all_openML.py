@@ -46,7 +46,7 @@ def main():
     p_ntrain    = args.ntrain
     p_output    = args.output
 
-    open_ml_problems = os.listdir(open_ml_problems_folder)
+    open_ml_problems = sorted(os.listdir(open_ml_problems_folder))
 
     for ml_problem in open_ml_problems:
 
