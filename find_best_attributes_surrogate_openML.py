@@ -149,6 +149,8 @@ def main():
             if value == 1: 
                 indices.append(index) 
 
+        print(f'Training SVM with {len(indices)} from {len(solution.data)} available features')
+
         # keep only selected filters from solution
         x_train_filters = X_train[:, indices]
         x_test_filters = X_test[ :, indices]
