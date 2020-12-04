@@ -88,7 +88,7 @@ class ILSSurrogate(Algorithm):
         print("Start fitting again the surrogate model")
         for r in range(10):
             print("Iteration n°{0}: for fitting surrogate".format(r))
-            algo.run(samplefile=self.solutions_file, sample=1000, step=10)
+            algo.run(samplefile=self.solutions_file, sample=100, step=10)
 
         joblib.dump(algo, self.surrogate_file_path)
 
