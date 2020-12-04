@@ -82,13 +82,20 @@ class ILSSurrogate(Algorithm):
         model = Lasso(alpha=1e-5)
         surrogate = WalshSurrogate(order=2, size=problem.size, model=model)
         analysis = FitterAnalysis(logfile="train_surrogate.log", problem=problem)
-
         algo = FitterAlgo(problem=problem, surrogate=surrogate, analysis=analysis, seed=problem.seed)
 
+        # dynamic number of samples based on dataset real evaluations
+        nsamples = None
+        with open(self.solutions_file, 'r') as f:
+            nsamples = len(f.readlines()) - 1 # avoid header
+
+        training_samples = int(0.7 * nsamples) # 70% used for learning part at each iteration
+        
         print("Start fitting again the surrogate model")
+        print(f'Using {training_samples} of {nsamples} samples for train dataset')
         for r in range(10):
             print("Iteration n°{0}: for fitting surrogate".format(r))
-            algo.run(samplefile=self.solutions_file, sample=100, step=10)
+            algo.run(samplefile=self.solutions_file, sample=training_samples, step=10)
 
         joblib.dump(algo, self.surrogate_file_path)
 
