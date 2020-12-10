@@ -230,6 +230,10 @@ class ILSSurrogate(Algorithm):
             training_surrogate_every = int(r_squared * self.ls_train_surrogate)
             print(f"=> R^2 of surrogate is of {r_squared}. Retraining model every {training_surrogate_every} LS")
 
+            # avoid issue when lauching every each local search
+            if training_surrogate_every <= 0:
+                training_surrogate_every = 1
+
             # check if necessary or not to train again surrogate
             if self.n_local_search % training_surrogate_every == 0 and self.start_train_surrogate <= self.getGlobalEvaluation():
 
