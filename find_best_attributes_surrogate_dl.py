@@ -230,6 +230,7 @@ def main():
         test_roc_auc = roc_auc_score(y_test, y_test_predict)
 
         end = datetime.datetime.now()
+        del model
 
         diff = end - start
 
