@@ -227,7 +227,9 @@ class ILSSurrogate(Algorithm):
                 self.progress()
 
             # check using specific dynamic criteria based on r^2
-            training_surrogate_every = int(self.analysis.coefficient_of_determination(self.surrogate) * self.ls_train_surrogate)
+            r_squared = self.analysis.coefficient_of_determination(self.surrogate)
+            training_surrogate_every = int(r_squared * self.ls_train_surrogate)
+            print(f"=> R^2 of surrogate is of {r_squared}. Retraining model every {training_surrogate_every} LS")
 
             # check if necessary or not to train again surrogate
             if self.n_local_search % training_surrogate_every == 0 and self.start_train_surrogate <= self.getGlobalEvaluation():
