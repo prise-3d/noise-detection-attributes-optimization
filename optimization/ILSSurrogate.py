@@ -83,6 +83,7 @@ class ILSSurrogate(Algorithm):
         surrogate = WalshSurrogate(order=2, size=problem.size, model=model)
         analysis = FitterAnalysis(logfile="train_surrogate.log", problem=problem)
         algo = FitterAlgo(problem=problem, surrogate=surrogate, analysis=analysis, seed=problem.seed)
+        self.analysis = analysis
 
         # dynamic number of samples based on dataset real evaluations
         nsamples = None
@@ -225,8 +226,11 @@ class ILSSurrogate(Algorithm):
 
                 self.progress()
 
+            # check using specific dynamic criteria based on r^2
+            training_surrogate_every = int(self.analysis.coefficient_of_determination(self.surrogate) * self.ls_train_surrogate)
+
             # check if necessary or not to train again surrogate
-            if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate <= self.getGlobalEvaluation():
+            if self.n_local_search % training_surrogate_every == 0 and self.start_train_surrogate <= self.getGlobalEvaluation():
 
                 # train again surrogate on real evaluated solutions file
                 self.train_surrogate()

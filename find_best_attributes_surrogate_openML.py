@@ -111,7 +111,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train and find best filters to use for model")
 
     parser.add_argument('--data', type=str, help='open ml dataset filename prefix', required=True)
-    #parser.add_argument('--start_surrogate', type=int, help='number of evalution before starting surrogare model', default=100)
+    parser.add_argument('--every_ls', type=int, help='train every ls surrogate model', default=50) # default value
     parser.add_argument('--ils', type=int, help='number of total iteration for ils algorithm', required=True)
     parser.add_argument('--ls', type=int, help='number of iteration for Local Search algorithm', required=True)
     parser.add_argument('--output', type=str, help='output surrogate model name')
@@ -119,7 +119,7 @@ def main():
     args = parser.parse_args()
 
     p_data_file = args.data
-    #p_start     = args.start_surrogate
+    p_every_ls     = args.every_ls
     p_ils_iteration = args.ils
     p_ls_iteration  = args.ls
     p_output = args.output
@@ -216,7 +216,7 @@ def main():
                         _surrogate_file_path=surrogate_output_model,
                         _start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
                         _solutions_file=surrogate_output_data,
-                        _ls_train_surrogate=1,
+                        _ls_train_surrogate=p_every_ls, # retrain surrogate every 5 iteration
                         _maximise=True)
     
     algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
