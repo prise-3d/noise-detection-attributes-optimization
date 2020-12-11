@@ -11,9 +11,9 @@ from macop.callbacks.Callback import Callback
 from macop.utils.color import macop_text, macop_line
 
 
-class SurrogateCheckpoint(Callback):
+class MultiSurrogateCheckpoint(Callback):
     """
-    SurrogateCheckpoint is used for logging training data information about surrogate
+    MultiSurrogateCheckpoint is used for keep track of sub-surrogate problem indices
 
     Attributes:
         algo: {Algorithm} -- main algorithm instance reference
@@ -73,7 +73,7 @@ class SurrogateCheckpoint(Callback):
             with open(self._filepath) as f:
 
                 # get last line and read data
-                lastline = f.readlines()[-1]
+                lastline = f.readlines()[-1].replace(';\n', '')
                 data = lastline.split(';')
 
                 k_indices = data[1:]

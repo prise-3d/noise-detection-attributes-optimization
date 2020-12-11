@@ -9,6 +9,7 @@ import time
 import math
 import numpy as np
 import pandas as pd
+import random
 
 # module imports
 from macop.algorithms.Algorithm import Algorithm
@@ -43,6 +44,7 @@ class ILSMultiSurrogate(Algorithm):
         ls_train_surrogates: {int} -- Specify if we need to retrain our surrogate model (every Local Search)
         k_division: {int} -- number of expected division for current features problem
         k_dynamic: {bool} -- specify if indices are changed for each time we train a new surrogate model
+        k_random: {bool} -- random initialization of k_indices for each surrogate features model data
         solutions_file: {str} -- Path where real evaluated solutions are saved in order to train surrogate again
         callbacks: {[Callback]} -- list of Callback class implementation to do some instructions every number of evaluations and `load` when initializing algorithm
     """
@@ -52,11 +54,12 @@ class ILSMultiSurrogate(Algorithm):
                  operators,
                  policy,
                  validator,
-                 surrogate_file_path,
-                 start_train_surrogate,
-                 ls_train_surrogate,
+                 surrogates_file_path,
+                 start_train_surrogates,
+                 ls_train_surrogates,
                  k_division,
                  solutions_file,
+                 k_random=True,
                  k_dynamic=False,
                  maximise=True,
                  parent=None):
@@ -68,21 +71,33 @@ class ILSMultiSurrogate(Algorithm):
         self._n_local_search = 0
         self._main_evaluator = evaluator
 
-        self._surrogate_file_path = surrogate_file_path
-        self._start_train_surrogate = start_train_surrogate
+        self._surrogates_file_path = surrogates_file_path
+        self._start_train_surrogates = start_train_surrogates
 
         self._surrogate_evaluator = None
         self._surrogate_analyser = None
 
-        self._ls_train_surrogate = ls_train_surrogate
+        self._ls_train_surrogates = ls_train_surrogates
         self._solutions_file = solutions_file
 
         self._k_division = k_division
         self._k_dynamic = k_dynamic
+        self._k_random = k_random
+        self._k_indices = None
+        self._surrogates = None
 
     def init_k_split_indices(self):
+        """Initialize k_indices for the new training of surrogate
+
+        Returns:
+            k_indices: [description]
+        """
         a = list(range(self._bestSolution._size))
         n_elements = int(math.ceil(self._bestSolution._size / self._k_division)) # use of ceil to avoid loss of data
+
+        if self._k_random:
+            random.shuffle(a) # random subset
+
         splitted_indices = [a[x:x+n_elements] for x in range(0, len(a), n_elements)]
 
         return splitted_indices
@@ -115,19 +130,22 @@ class ILSMultiSurrogate(Algorithm):
         
         df = pd.read_csv(self._solutions_file, sep=';')
         # learning set and test set
-        learn = df.sample(nsamples)
+        learn = df.sample(training_samples)
         test = df.drop(learn.index)
 
         print(f'Training all surrogate models using {training_samples} of {nsamples} samples for train dataset')
-
+        
         # 2. for each sub space indices, learn new surrogate
-
-        if not os.path.exists(self._surrogate_file_path):
-            os.makedirs(self._surrogate_file_path)
+        if not os.path.exists(self._surrogates_file_path):
+            os.makedirs(self._surrogates_file_path)
 
         for i, indices in enumerate(self._k_indices):
 
-            current_learn = learn[learn.iloc[indices]]
+            current_learn = learn.copy()
+            current_learn.x = current_learn.x.apply(lambda x: ','.join(list(map(str, np.fromstring(x, dtype=int, sep=',')[indices]))))
+
+            current_test = test.copy()
+            current_test.x = current_test.x.apply(lambda x: ','.join(list(map(str, np.fromstring(x, dtype=int, sep=',')[indices]))))
 
             problem = ND3DProblem(size=len(indices)) # problem size based on best solution size (need to improve...)
             model = Lasso(alpha=1e-5)
@@ -138,7 +156,7 @@ class ILSMultiSurrogate(Algorithm):
             print(f"Start fitting again the surrogate model n°{i}")
             for r in range(10):
                 print(f"Iteration n°{r}: for fitting surrogate n°{i}")
-                algo.run_samples(learn=current_learn, test=test, step=10)
+                algo.run_samples(learn=current_learn, test=current_test, step=10)
 
             # keep well ordered surrogate into file manager
             str_index = str(i)
@@ -146,7 +164,7 @@ class ILSMultiSurrogate(Algorithm):
             while len(str_index) < 6:
                 str_index = "0" + str_index
 
-            joblib.dump(algo, os.path.join(self._surrogate_file_path, 'surrogate_{str_indec}'))
+            joblib.dump(algo, os.path.join(self._surrogates_file_path, f'surrogate_{str_index}'))
 
 
     def load_surrogates(self):
@@ -154,15 +172,15 @@ class ILSMultiSurrogate(Algorithm):
         """
 
         # need to first train surrogate if not exist
-        if not os.path.exists(self._surrogate_file_path):
+        if not os.path.exists(self._surrogates_file_path):
             self.train_surrogates()
 
         self._surrogates = []
 
-        surrogates_path = sorted(os.listdir(self._surrogate_file_path))
+        surrogates_path = sorted(os.listdir(self._surrogates_file_path))
 
         for surrogate_p in surrogates_path:
-            model_path = os.path.join(self._surrogate_file_path, surrogate_p)
+            model_path = os.path.join(self._surrogates_file_path, surrogate_p)
             surrogate_model = joblib.load(model_path)
 
             self._surrogates.append(surrogate_model)
@@ -202,6 +220,8 @@ class ILSMultiSurrogate(Algorithm):
 
             r_squared = self._surrogates[i].analysis.coefficient_of_determination(self._surrogates[i].surrogate)
             r_squared_scores.append(r_squared)
+
+        print(r_squared_scores)
 
         return sum(r_squared_scores) / len(r_squared_scores)
 
@@ -245,7 +265,8 @@ class ILSMultiSurrogate(Algorithm):
         self.initRun()
 
         # based on best solution found, initialize k pool indices
-        self._k_indices = self.init_k_split_indices()
+        if self._k_indices == None:
+            self._k_indices = self.init_k_split_indices()
 
         # enable resuming for ILS
         self.resume()
@@ -256,14 +277,14 @@ class ILSMultiSurrogate(Algorithm):
             nsamples = len(f.readlines()) - 1 # avoid header
 
         if self.getGlobalEvaluation() < nsamples:
-            print(f'Restart using {nsamples} of {self._start_train_surrogate} real evaluations obtained')
+            print(f'Restart using {nsamples} of {self._start_train_surrogates} real evaluations obtained')
             self._numberOfEvaluations = nsamples
 
-        if self._start_train_surrogate > self.getGlobalEvaluation():
+        if self._start_train_surrogates > self.getGlobalEvaluation():
         
             # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
             # using randomly generated solutions (in order to cover seearch space)
-            while self._start_train_surrogate > self.getGlobalEvaluation():
+            while self._start_train_surrogates > self.getGlobalEvaluation():
                 
                 newSolution = self._initializer()
 
@@ -283,7 +304,7 @@ class ILSMultiSurrogate(Algorithm):
         while not self.stop():
 
             # set current evaluator based on used or not of surrogate function
-            self._evaluator = self.surrogate_evaluator if self._start_train_surrogate <= self.getGlobalEvaluation() else self._main_evaluator
+            self._evaluator = self.surrogate_evaluator if self._start_train_surrogates <= self.getGlobalEvaluation() else self._main_evaluator
 
             # create new local search instance
             # passing global evaluation param from ILS
@@ -305,7 +326,7 @@ class ILSMultiSurrogate(Algorithm):
             # if better solution than currently, replace it (solution saved in training pool, only if surrogate process is in a second process step)
             # Update : always add new solution into surrogate pool, not only if solution is better
             #if self.isBetter(newSolution) and self.start_train_surrogate < self.getGlobalEvaluation():
-            if self._start_train_surrogate <= self.getGlobalEvaluation():
+            if self._start_train_surrogates <= self.getGlobalEvaluation():
 
                 # if better solution found from local search, retrained the found solution and test again
                 # without use of surrogate
@@ -324,7 +345,7 @@ class ILSMultiSurrogate(Algorithm):
 
             # check using specific dynamic criteria based on r^2
             r_squared = self.surrogates_coefficient_of_determination()
-            training_surrogate_every = int(r_squared * self._ls_train_surrogate)
+            training_surrogate_every = int(r_squared * self._ls_train_surrogates)
             print(f"=> R^2 of surrogate is of {r_squared}. Retraining model every {training_surrogate_every} LS")
 
             # avoid issue when lauching every each local search
@@ -332,7 +353,7 @@ class ILSMultiSurrogate(Algorithm):
                 training_surrogate_every = 1
 
             # check if necessary or not to train again surrogate
-            if self._n_local_search % training_surrogate_every == 0 and self._start_train_surrogate <= self.getGlobalEvaluation():
+            if self._n_local_search % training_surrogate_every == 0 and self._start_train_surrogates <= self.getGlobalEvaluation():
 
                 # reinitialization of k_indices for the new training
                 if self._k_dynamic:

@@ -45,6 +45,13 @@ from optimization.callbacks.MultiSurrogateCheckpoint import MultiSurrogateCheckp
 
 from sklearn.ensemble import RandomForestClassifier
 
+# avoid display of warning
+def warn(*args, **kwargs):
+    pass
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.warn = warn
 
 # default validator
 def validator(solution):
