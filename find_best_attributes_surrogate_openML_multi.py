@@ -117,10 +117,12 @@ def main():
 
     parser.add_argument('--data', type=str, help='open ml dataset filename prefix', required=True)
     parser.add_argument('--every_ls', type=int, help='train every ls surrogate model', default=50) # default value
-    parser.add_argument('--k_division', type=int, help='number of expected sub surrogate model', required=True)
+    parser.add_argument('--k_division', type=int, help='number of expected sub surrogate model', default=20)
     parser.add_argument('--k_dynamic', type=int, help='specify if indices for each sub surrogate model are changed or not for each training', default=0, choices=[0, 1])
+    parser.add_argument('--k_random', type=int, help='specify if split is random or not', default=1, choices=[0, 1])
     parser.add_argument('--ils', type=int, help='number of total iteration for ils algorithm', required=True)
     parser.add_argument('--ls', type=int, help='number of iteration for Local Search algorithm', required=True)
+    parser.add_argument('--generate_only', type=int, help='number of iteration for Local Search algorithm', default=0, choices=[0, 1])
     parser.add_argument('--output', type=str, help='output surrogate model name')
 
     args = parser.parse_args()
@@ -129,8 +131,10 @@ def main():
     p_every_ls   = args.every_ls
     p_k_division = args.k_division
     p_k_dynamic = bool(args.k_dynamic)
+    p_k_random = bool(args.k_random)
     p_ils_iteration = args.ils
     p_ls_iteration  = args.ls
+    p_generate_only = bool(args.generate_only)
     p_output = args.output
 
     # load data from file and get problem size
@@ -229,12 +233,15 @@ def main():
                         operators=operators, 
                         policy=policy, 
                         validator=validator,
+                        output_log_surrogates=os.path.join(cfg.output_surrogates_data_folder, 'logs', p_output),
                         surrogates_file_path=surrogate_output_model,
                         start_train_surrogates=p_start, # start learning and using surrogate after 1000 real evaluation
                         solutions_file=surrogate_output_data,
                         ls_train_surrogates=p_every_ls, # retrain surrogate every `x` iteration
                         k_division=p_k_division,
                         k_dynamic=p_k_dynamic,
+                        k_random=p_k_random,
+                        generate_only=p_generate_only,
                         maximise=True)
     
     algo.addCallback(BasicCheckpoint(every=1, filepath=backup_file_path))
@@ -253,7 +260,7 @@ def main():
 
     filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_attributes_result_filename)
 
-    line_info = p_data_file + ';' + str(p_ils_iteration) + ';' + str(p_ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness())
+    line_info = p_data_file + ';' + str(p_ils_iteration) + ';' + str(p_ls_iteration) + ';' + str(bestSol._data) + ';' + str(list(bestSol._data).count(1)) + ';' + str(bestSol.fitness())
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     

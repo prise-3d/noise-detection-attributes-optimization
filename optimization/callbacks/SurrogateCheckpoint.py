@@ -48,7 +48,15 @@ class SurrogateCheckpoint(Callback):
                 if index < solutionSize - 1:
                     solutionData += ' '
 
-            line = str(currentEvaluation) + ';' + str(surrogate_analyser._every_ls) + ';' + str(surrogate_analyser._time) + ';' + str(surrogate_analyser._r2) \
+            r2_data = ""
+            r2Size = len(surrogate_analyser._r2_scores)
+            for index, val in enumerate(surrogate_analyser._r2_scores):
+                r2_data += str(val)
+
+                if index < r2Size - 1:
+                    r2_data += ' '
+
+            line = str(currentEvaluation) + ';' + str(surrogate_analyser._n_local_search) + ';' + str(surrogate_analyser._every_ls) + ';' + str(surrogate_analyser._time) + ';' + r2_data + ';' + str(surrogate_analyser._r2) \
                 + ';' + solutionData + ';' + str(solution.fitness()) + ';\n'
 
             # check if file exists
@@ -61,7 +69,28 @@ class SurrogateCheckpoint(Callback):
 
     def load(self):
         """
-        Load nothing there, as we only log surrogate training information
+        only load global n local search
         """
 
-        logging.info("No loading to do with surrogate checkpoint")
+        if os.path.exists(self._filepath):
+
+            logging.info('Load n local search')
+            with open(self._filepath) as f:
+
+                # get last line and read data
+                lastline = f.readlines()[-1].replace(';\n', '')
+                data = lastline.split(';')
+
+                n_local_search = int(data[1])
+
+                # set k_indices into main algorithm
+                self._algo._total_n_local_search = n_local_search
+
+            print(macop_line())
+            print(macop_text(f'SurrogateCheckpoint found from `{self._filepath}` file.'))
+
+        else:
+            print(macop_text('No backup found...'))
+            logging.info("Can't load Surrogate backup... Backup filepath not valid in SurrogateCheckpoint")
+
+        print(macop_line())
