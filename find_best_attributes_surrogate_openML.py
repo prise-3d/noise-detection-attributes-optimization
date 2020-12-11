@@ -14,10 +14,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 
-from keras.layers import Dense, Dropout, LSTM, Embedding, GRU, BatchNormalization
-from keras.preprocessing.sequence import pad_sequences
-from keras.models import Sequential
-
 import joblib
 import sklearn
 import sklearn.svm as svm
@@ -44,6 +40,7 @@ from macop.operators.policies.UCBPolicy import UCBPolicy
 
 from macop.callbacks.BasicCheckpoint import BasicCheckpoint
 from macop.callbacks.UCBCheckpoint import UCBCheckpoint
+from optimization.callbacks.SurrogateCheckpoint import SurrogateCheckpoint
 
 from sklearn.ensemble import RandomForestClassifier
 
@@ -52,14 +49,14 @@ from sklearn.ensemble import RandomForestClassifier
 def validator(solution):
 
     # at least 5 attributes
-    if list(solution.data).count(1) < 5:
+    if list(solution._data).count(1) < 2:
         return False
 
     return True
 
 def train_model(X_train, y_train):
 
-    print ('Creating model...')
+    #print ('Creating model...')
     # here use of SVM with grid search CV
     Cs = [0.001, 0.01, 0.1, 1, 10, 100]
     gammas = [0.001, 0.01, 0.1,10, 100]
@@ -67,7 +64,7 @@ def train_model(X_train, y_train):
 
     svc = svm.SVC(probability=True, class_weight='balanced')
     #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-    clf = GridSearchCV(svc, param_grid, cv=4, verbose=1, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=4, verbose=0, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 
@@ -119,7 +116,7 @@ def main():
     args = parser.parse_args()
 
     p_data_file = args.data
-    p_every_ls     = args.every_ls
+    p_every_ls   = args.every_ls
     p_ils_iteration = args.ils
     p_ls_iteration  = args.ls
     p_output = args.output
@@ -145,11 +142,11 @@ def main():
         # get indices of filters data to use (filters selection from solution)
         indices = []
 
-        for index, value in enumerate(solution.data): 
+        for index, value in enumerate(solution._data): 
             if value == 1: 
                 indices.append(index) 
 
-        print(f'Training SVM with {len(indices)} from {len(solution.data)} available features')
+        print(f'Training SVM with {len(indices)} from {len(solution._data)} available features')
 
         # keep only selected filters from solution
         x_train_filters = X_train[:, indices]
@@ -187,6 +184,7 @@ def main():
 
     backup_file_path = os.path.join(backup_model_folder, p_output + '.csv')
     ucb_backup_file_path = os.path.join(backup_model_folder, p_output + '_ucbPolicy.csv')
+    surrogate_backup_file_path = os.path.join(cfg.output_surrogates_data_folder, p_output + '_train.csv')
 
     # prepare optimization algorithm (only use of mutation as only ILS are used here, and local search need only local permutation)
     operators = [SimpleBinaryMutation(), SimpleMutation()]
@@ -205,22 +203,28 @@ def main():
 
     # custom start surrogate variable based on problem size
     p_start = int(0.5 * problem_size)
+
+    # fixed limit
+    if p_start < 50:
+        p_start = 50
+
     print(f'Starting using surrogate after {p_start} reals training')
 
     # custom ILS for surrogate use
-    algo = ILSSurrogate(_initalizer=init, 
-                        _evaluator=evaluate, # same evaluator by defadefaultult, as we will use the surrogate function
-                        _operators=operators, 
-                        _policy=policy, 
-                        _validator=validator,
-                        _surrogate_file_path=surrogate_output_model,
-                        _start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
-                        _solutions_file=surrogate_output_data,
-                        _ls_train_surrogate=p_every_ls, # retrain surrogate every 5 iteration
-                        _maximise=True)
+    algo = ILSSurrogate(initalizer=init, 
+                        evaluator=evaluate, # same evaluator by defadefaultult, as we will use the surrogate function
+                        operators=operators, 
+                        policy=policy, 
+                        validator=validator,
+                        surrogate_file_path=surrogate_output_model,
+                        start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
+                        solutions_file=surrogate_output_data,
+                        ls_train_surrogate=p_every_ls, # retrain surrogate every 5 iteration
+                        maximise=True)
     
-    algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
-    algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
+    algo.addCallback(BasicCheckpoint(every=1, filepath=backup_file_path))
+    algo.addCallback(UCBCheckpoint(every=1, filepath=ucb_backup_file_path))
+    algo.addCallback(SurrogateCheckpoint(every=p_ls_iteration, filepath=surrogate_backup_file_path)) # try every LS like this
 
     bestSol = algo.run(p_ils_iteration, p_ls_iteration)
 

@@ -43,7 +43,7 @@ class LocalSearchSurrogate(Algorithm):
         # initialize current solution
         self.initRun()
 
-        solutionSize = self.currentSolution.size
+        solutionSize = self._currentSolution._size
 
         # local search algorithm implementation
         while not self.stop():
@@ -51,19 +51,18 @@ class LocalSearchSurrogate(Algorithm):
             for _ in range(solutionSize):
 
                 # update current solution using policy
-                newSolution = self.update(self.currentSolution)
+                newSolution = self.update(self._currentSolution)
 
                 # if better solution than currently, replace it
                 if self.isBetter(newSolution):
-                    self.bestSolution = newSolution
+                    self._bestSolution = newSolution
 
                 # increase number of evaluations
                 self.increaseEvaluation()
 
                 self.progress()
 
-                logging.info("---- Current %s - SCORE %s" %
-                             (newSolution, newSolution.fitness()))
+                logging.info(f"---- Current {newSolution} - SCORE {newSolution.fitness()}")
 
                 # add to surrogate pool file if necessary (using ILS parent reference)
                 # if self.parent.start_train_surrogate >= self.getGlobalEvaluation():
@@ -74,12 +73,11 @@ class LocalSearchSurrogate(Algorithm):
                     break
 
             # after applying local search on currentSolution, we switch into new local area using known current bestSolution
-            self.currentSolution = self.bestSolution
+            self._currentSolution = self._bestSolution
 
-        logging.info("End of %s, best solution found %s" %
-                     (type(self).__name__, self.bestSolution))
+        logging.info(f"End of {type(self).__name__}, best solution found {self._bestSolution}")
 
-        return self.bestSolution
+        return self._bestSolution
 
     def addCallback(self, callback):
         """Add new callback to algorithm specifying usefull parameters
@@ -88,10 +86,10 @@ class LocalSearchSurrogate(Algorithm):
             callback: {Callback} -- specific Callback instance
         """
         # specify current main algorithm reference
-        if self.parent is not None:
-            callback.setAlgo(self.parent)
+        if self._parent is not None:
+            callback.setAlgo(self._parent)
         else:
             callback.setAlgo(self)
 
         # set as new
-        self.callbacks.append(callback)
+        self._callbacks.append(callback)
