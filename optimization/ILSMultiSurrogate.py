@@ -229,7 +229,7 @@ class ILSMultiSurrogate(Algorithm):
         """Compute r² for each sub surrogate model
 
         Return:
-            r_squared: {float} -- mean score of r_squred obtained from surrogate models
+            r_squared_scores: [{float}] -- mean score of r_squred obtained from surrogate models
         """
 
         # for each indices set, get r^2 surrogate model and made prediction score
@@ -242,10 +242,30 @@ class ILSMultiSurrogate(Algorithm):
         #     r_squared = self._surrogates[i].analysis.coefficient_of_determination(self._surrogates[i].surrogate)
         #     r_squared_scores.append(r_squared)
 
-        print(r_squared_scores)
+        #print(r_squared_scores)
 
         return r_squared_scores
 
+    def surrogates_mae(self):
+        """Compute mae for each sub surrogate model
+
+        Return:
+            mae_scores: [{float}] -- mae scores from model
+        """
+
+        # for each indices set, get r^2 surrogate model and made prediction score
+
+        num_cores = multiprocessing.cpu_count()
+
+        mae_scores = Parallel(n_jobs=num_cores)(delayed(s_model.analysis.mae)(s_model.surrogate) for s_model in self._surrogates)
+
+        # for i, _ in enumerate(self._k_indices):
+        #     r_squared = self._surrogates[i].analysis.coefficient_of_determination(self._surrogates[i].surrogate)
+        #     r_squared_scores.append(r_squared)
+
+        #print(mae_scores)
+
+        return mae_scores
 
     def add_to_surrogate(self, solution):
 
@@ -373,8 +393,11 @@ class ILSMultiSurrogate(Algorithm):
             r_squared_scores = self.surrogates_coefficient_of_determination()
             r_squared = sum(r_squared_scores) / len(r_squared_scores)
 
-            training_surrogate_every = int(r_squared * self._ls_train_surrogates)
-            print(f"=> R² of surrogate is of {r_squared} -- [Retraining model after {self._n_local_search % training_surrogate_every} of {training_surrogate_every} LS]")
+            mae_scores = self.surrogates_mae()
+            mae_score = sum(mae_scores) / len(mae_scores)
+
+            training_surrogate_every = int(abs(r_squared) * self._ls_train_surrogates) # use of absolute value for r²
+            print(f"=> R² of surrogate is of {r_squared} | MAE is of {mae_score} -- [Retraining model after {self._n_local_search % training_surrogate_every} of {training_surrogate_every} LS]")
 
             # avoid issue when lauching every each local search
             if training_surrogate_every <= 0:
@@ -393,7 +416,7 @@ class ILSMultiSurrogate(Algorithm):
                 self.train_surrogates()
                 training_time = time.time() - start_training
 
-                self._surrogate_analyser = SurrogateAnalysis(training_time, training_surrogate_every, r_squared_scores, r_squared, self.getGlobalMaxEvaluation(), self._total_n_local_search)
+                self._surrogate_analyser = SurrogateAnalysis(training_time, training_surrogate_every, r_squared_scores, r_squared, mae_scores, mae_score, self.getGlobalMaxEvaluation(), self._total_n_local_search)
 
                 # reload new surrogate function
                 self.load_surrogates()

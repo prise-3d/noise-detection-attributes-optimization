@@ -48,15 +48,12 @@ class SurrogateCheckpoint(Callback):
                 if index < solutionSize - 1:
                     solutionData += ' '
 
-            r2_data = ""
-            r2Size = len(surrogate_analyser._r2_scores)
-            for index, val in enumerate(surrogate_analyser._r2_scores):
-                r2_data += str(val)
-
-                if index < r2Size - 1:
-                    r2_data += ' '
+            # get score of r² and mae
+            r2_data = ' '.join(list(map(str, surrogate_analyser._r2_scores)))
+            mae_data = ' '.join(list(map(str, surrogate_analyser._mae_scores)))
 
             line = str(currentEvaluation) + ';' + str(surrogate_analyser._n_local_search) + ';' + str(surrogate_analyser._every_ls) + ';' + str(surrogate_analyser._time) + ';' + r2_data + ';' + str(surrogate_analyser._r2) \
+                + ';' + mae_data + ';' + surrogate_analyser._mae \
                 + ';' + solutionData + ';' + str(solution.fitness()) + ';\n'
 
             # check if file exists
