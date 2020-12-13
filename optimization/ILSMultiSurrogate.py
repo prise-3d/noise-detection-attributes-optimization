@@ -397,11 +397,11 @@ class ILSMultiSurrogate(Algorithm):
             mae_score = sum(mae_scores) / len(mae_scores)
 
             training_surrogate_every = int(abs(r_squared) * self._ls_train_surrogates) # use of absolute value for r²
-            print(f"=> R² of surrogate is of {r_squared} | MAE is of {mae_score} -- [Retraining model after {self._n_local_search % training_surrogate_every} of {training_surrogate_every} LS]")
 
             # avoid issue when lauching every each local search
             if training_surrogate_every <= 0:
                 training_surrogate_every = 1
+            print(f"=> R² of surrogate is of {r_squared} | MAE is of {mae_score} -- [Retraining model after {self._n_local_search % training_surrogate_every} of {training_surrogate_every} LS]")
 
             # check if necessary or not to train again surrogate
             if self._n_local_search % training_surrogate_every == 0 and self._start_train_surrogates <= self.getGlobalEvaluation():

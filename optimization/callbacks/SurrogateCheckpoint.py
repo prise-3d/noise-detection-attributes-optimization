@@ -53,7 +53,7 @@ class SurrogateCheckpoint(Callback):
             mae_data = ' '.join(list(map(str, surrogate_analyser._mae_scores)))
 
             line = str(currentEvaluation) + ';' + str(surrogate_analyser._n_local_search) + ';' + str(surrogate_analyser._every_ls) + ';' + str(surrogate_analyser._time) + ';' + r2_data + ';' + str(surrogate_analyser._r2) \
-                + ';' + mae_data + ';' + surrogate_analyser._mae \
+                + ';' + mae_data + ';' + str(surrogate_analyser._mae) \
                 + ';' + solutionData + ';' + str(solution.fitness()) + ';\n'
 
             # check if file exists
