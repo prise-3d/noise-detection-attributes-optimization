@@ -4,9 +4,10 @@ import shutil
 open_ml_problems_folder = 'OpenML_datasets'
 surrogate_data_path = 'data/surrogate/data/'
 
-k_params = [100, 150, 200]
-k_random = [0, 1]
-k_reinit = [0, 1]
+# fixed test params as first part
+k_params = [100] # 100, 150, 200
+k_random = [0] # 0, 1
+k_reinit = [0] # 0, 1
 every_ls = 50
 
 n_times = 5
@@ -47,12 +48,10 @@ def main():
         # - run new instance using specific data
         for k in k_params:
             for k_r in k_random:
-                # for k_init in k_reinit:
+                for k_init in k_reinit:
 
                     # if not use of k_reinit and use of random, then run multiple times this instance to do mean later
-                    #if k_init == 0 and k_r == 1:
-                    if k_r == 1:
-
+                    if k_init == 0 and k_r == 1:
                         for i in range(n_times):
 
                             str_index = str(i)
@@ -60,7 +59,7 @@ def main():
                             while len(str_index) < 3:
                                 str_index = "0" + str_index
 
-                            output_problem_name = f'{ml_problem_name}_everyLS_{every_ls}_k{k}_random{k_r}_{str_index}'
+                            output_problem_name = f'{ml_problem_name}_everyLS_{every_ls}_k{k}_random{k_r}_reinit{k_init}_{str_index}'
 
                             # copy pre-computed real evaluation data for this instance
                             current_output_real_eval_path = os.path.join(surrogate_data_path, output_problem_name)
@@ -74,12 +73,12 @@ def main():
                                             f"--k_division {k} " \
                                             f"--k_random {k_r} " \
                                             f"--output {output_problem_name}"
-                                            #f"--k_dynamic {k_init} " \
+                                            f"--k_dynamic {k_init} " \
                             print(f'Running extraction data for {ml_problem_name} with [ils: {p_ils}, ls: {p_ls}, k: {k}, k_r: {k_r}, i: {i}]')
                             os.system(ml_surrogate_multi_command)
 
                     else:
-                        output_problem_name = f'{ml_problem_name}_everyLS_{every_ls}_k{k}_random{k_r}'
+                        output_problem_name = f'{ml_problem_name}_everyLS_{every_ls}_k{k}_random{k_r}_reinit{k_init}'
 
                         # copy pre-computed real evaluation data for this instance
                         current_output_real_eval_path = os.path.join(surrogate_data_path, output_problem_name)
@@ -93,7 +92,7 @@ def main():
                                         f"--k_division {k} " \
                                         f"--k_random {k_r} " \
                                         f"--output {output_problem_name}"
-                                        #f"--k_dynamic {k_init} " \
+                                        f"--k_dynamic {k_init} " \
                         print(f'Running extraction data for {ml_problem_name} with [ils: {p_ils}, ls: {p_ls}, k: {k}, k_r: {k_r}]')
                         os.system(ml_surrogate_multi_command)
 
