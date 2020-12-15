@@ -1,10 +1,10 @@
 import os, argparse
 import shutil
 
-open_ml_problems_folder = 'OpenML_datasets'
+open_ml_problems_folder = 'OpenML_v2'
 surrogate_data_path = 'data/surrogate/data/'
 
-k_params = [100, 150, 200]
+k_params = [5]
 k_random = [0, 1]
 k_reinit = [0, 1]
 every_ls = 50

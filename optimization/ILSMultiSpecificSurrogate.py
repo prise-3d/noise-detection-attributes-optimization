@@ -101,16 +101,17 @@ class ILSMultiSpecificSurrogate(Algorithm):
         self._surrogates = None
 
         self._generate_only = generate_only
-
-        # add norm to indentify sub problem data
-        self._solutions_files = []
         self._solutions_folder = solutions_folder
+        
+
+    def init_solutions_files(self):
+        self._solutions_files = []
 
         if not os.path.exists(self._solutions_folder):
             os.makedirs(self._solutions_folder)
 
         # for each sub surrogate, associate its own surrogate file
-        for i in range(self._k_division):
+        for i in range(len(self._k_indices)):
             index_str = str(i)
 
             while len(index_str) < 3:
@@ -124,13 +125,16 @@ class ILSMultiSpecificSurrogate(Algorithm):
                     f.write('x;y\n')
 
             self._solutions_files.append(solutions_path)
-        
+
 
     def define_sub_evaluators(self): 
         self._sub_evaluators = []
 
-        for i in range(self._k_division):
-            self._sub_evaluators.append(lambda s: self._sub_evaluator(s, self._k_indices[i]))
+        for i in range(len(self._k_indices)):
+
+            # need to pass as default argument indices
+            current_evaluator = lambda s, indices=self._k_indices[i]: self._sub_evaluator(s, indices)
+            self._sub_evaluators.append(current_evaluator)
 
 
     def init_population(self):
@@ -138,14 +142,14 @@ class ILSMultiSpecificSurrogate(Algorithm):
         self._population = []
 
         # initialize the population
-        for i in range(self._k_division):
+        for i in range(len(self._k_indices)):
             
             current_solution = self.pop_initializer(i)
-            
+
             # compute fitness using sub-problem evaluator
             fitness_score = self._sub_evaluators[i](current_solution)
             current_solution._score = fitness_score
-
+            
             self._population.append(current_solution)
 
 
@@ -169,7 +173,8 @@ class ILSMultiSpecificSurrogate(Algorithm):
 
         splitted_indices = [a[x:x+n_elements] for x in range(0, len(a), n_elements)]
 
-        return splitted_indices
+        self._k_division = len(splitted_indices) # update size of k if necessary
+        self._k_indices = splitted_indices
 
 
     def train_surrogate(self, index, indices):
@@ -185,15 +190,12 @@ class ILSMultiSpecificSurrogate(Algorithm):
         
         df = pd.read_csv(self._solutions_files[index], sep=';')
         # learning set and test set
-        learn = df.sample(training_samples)
-        test = df.drop(learn.index)
+        current_learn = df.sample(training_samples)
+        current_test = df.drop(learn.index)
 
         # TODO : (check) not necessary now to select specific features indices into set
-        current_learn = learn.copy()
-        # current_learn.x = current_learn.x.apply(lambda x: ','.join(list(map(str, np.fromstring(x, dtype=int, sep=',')[indices]))))
-
-        current_test = test.copy()
-        # current_test.x = current_test.x.apply(lambda x: ','.join(list(map(str, np.fromstring(x, dtype=int, sep=',')[indices]))))
+        # current_learn = learn.copy()
+        # current_test = test.copy()
 
         problem = ND3DProblem(size=len(indices)) # problem size based on best solution size (need to improve...)
         model = Lasso(alpha=1e-5)
@@ -359,12 +361,14 @@ class ILSMultiSpecificSurrogate(Algorithm):
         # initialize current solution
         self.initRun()
 
-        # based on best solution found, initialize k pool indices
-        if self._k_indices == None:
-            self._k_indices = self.init_k_split_indices()
-
         # enable resuming for ILS
         self.resume()
+
+        if self._k_indices is None:
+            self.init_k_split_indices()
+
+        # add norm to indentify sub problem data
+        self.init_solutions_files()
 
         # here we each surrogate sub evaluator
         self.define_sub_evaluators()
