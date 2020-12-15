@@ -72,8 +72,9 @@ def main():
                                             f"--every_ls {every_ls} " \
                                             f"--k_division {k} " \
                                             f"--k_random {k_r} " \
-                                            f"--output {output_problem_name}"
                                             f"--k_dynamic {k_init} " \
+                                            f"--output {output_problem_name}"
+                                            
                             print(f'Running extraction data for {ml_problem_name} with [ils: {p_ils}, ls: {p_ls}, k: {k}, k_r: {k_r}, i: {i}]')
                             os.system(ml_surrogate_multi_command)
 
@@ -91,8 +92,9 @@ def main():
                                         f"--every_ls {every_ls} " \
                                         f"--k_division {k} " \
                                         f"--k_random {k_r} " \
-                                        f"--output {output_problem_name}"
                                         f"--k_dynamic {k_init} " \
+                                        f"--output {output_problem_name}"
+                                        
                         print(f'Running extraction data for {ml_problem_name} with [ils: {p_ils}, ls: {p_ls}, k: {k}, k_r: {k_r}]')
                         os.system(ml_surrogate_multi_command)
 
