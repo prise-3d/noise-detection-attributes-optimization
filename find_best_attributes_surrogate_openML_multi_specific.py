@@ -184,7 +184,7 @@ def main():
 
         return test_roc_auc
 
-    def sub_evaluate(solution, targeted_indices):
+    def sub_evaluate(solution, index_number, targeted_indices):
 
         start = datetime.datetime.now()
 
@@ -195,7 +195,7 @@ def main():
             if value == 1: 
                 indices.append(targeted_indices[index]) 
 
-        print(f'Training sub-model SVM with {len(indices)} from {len(solution._data)} available features')
+        print(f'Training sub-model SVM n°{index_number} with {len(indices)} from {len(solution._data)} available features')
 
         # keep only selected filters from solution
         x_train_filters = X_train[:, indices]
@@ -212,7 +212,7 @@ def main():
 
         diff = end - start
 
-        print("Real sub-evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
+        print(f"Real sub-evaluation n°{index_number} took: {divmod(diff.days * 86400 + diff.seconds, 60)}, score found: {test_roc_auc}")
 
         return test_roc_auc
 

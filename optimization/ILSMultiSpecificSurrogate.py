@@ -133,7 +133,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
         for i in range(len(self._k_indices)):
 
             # need to pass as default argument indices
-            current_evaluator = lambda s, indices=self._k_indices[i]: self._sub_evaluator(s, indices)
+            current_evaluator = lambda s, number=i, indices=self._k_indices[i]: self._sub_evaluator(s, number, indices)
             self._sub_evaluators.append(current_evaluator)
 
 
@@ -191,7 +191,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
         df = pd.read_csv(self._solutions_files[index], sep=';')
         # learning set and test set
         current_learn = df.sample(training_samples)
-        current_test = df.drop(learn.index)
+        current_test = df.drop(current_learn.index)
 
         # TODO : (check) not necessary now to select specific features indices into set
         # current_learn = learn.copy()
@@ -375,7 +375,6 @@ class ILSMultiSpecificSurrogate(Algorithm):
         self.init_population()
 
         # count number of surrogate obtained and restart using real evaluations done for each surrogate (sub-model)
-
         if (self._start_train_surrogates * self._k_division) > self.getGlobalEvaluation():
 
             # for each sub problem (surrogate)
