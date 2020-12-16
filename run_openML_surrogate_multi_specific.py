@@ -96,8 +96,7 @@ def main():
                                         f"--output {output_problem_name}"
                                         
                         print(f'Running extraction data for {ml_problem_name} with [ils: {p_ils}, ls: {p_ls}, k: {k}, k_r: {k_r}]')
-                        #os.system(ml_surrogate_multi_command)
-                        print(ml_surrogate_multi_command)
+                        os.system(ml_surrogate_multi_command)
 
 
 
