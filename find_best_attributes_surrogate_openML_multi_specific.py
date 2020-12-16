@@ -243,7 +243,7 @@ def main():
     policy = RandomPolicy(operators)
 
     # custom start surrogate variable based on problem size
-    p_start = int(problem_size / p_k_division * 3) # 3 \times number of features for each sub-model
+    p_start = int(problem_size / p_k_division * 2) # 2 \times number of features for each sub-model
 
     # fixed minimal number of real evaluations
     if p_start < 50:

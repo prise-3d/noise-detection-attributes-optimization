@@ -424,12 +424,9 @@ class ILSMultiSpecificSurrogate(Algorithm):
             local_search_list = [] 
 
             for i in range(self._k_division):
-                # create new local search instance
-                # passing global evaluation param from ILS
 
                 # use specific initializer for pop_initialiser
                 # specific surrogate evaluator for this local search
-                # TODO : check this part
                 ls = LocalSearchSurrogate(lambda index=i: self.pop_initializer(index),
                             lambda s: self._surrogates[i].surrogate.predict([s._data])[0],
                             self._operators,
@@ -444,7 +441,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
 
                 local_search_list.append(ls)
 
-            # parallel run of local search
+            # parallel run of each local search
             num_cores = multiprocessing.cpu_count()
             ls_solutions = Parallel(n_jobs=num_cores)(delayed(ls.run)(ls_evaluations) for ls in local_search_list)
 
@@ -476,26 +473,29 @@ class ILSMultiSpecificSurrogate(Algorithm):
             # main best solution update
             if self._start_train_surrogates <= self.getGlobalEvaluation():
 
-                # need to create virtual solution
-                obtained_solution_data = np.array([ s._data for s in ls_solutions ]).flatten().tolist()
+                # need to create virtual solution from current population
+                obtained_solution_data = np.array([ s._data for s in self._population ]).flatten().tolist()
 
-                # init random solution 
-                current_solution = self._initializer()
-                current_solution.data = obtained_solution_data
+                if obtained_solution_data == self._bestSolution.data:
+                    print(f'-- No updates found from sub-model surrogates LS (best solution score: {self._bestSolution._score}')
+                else:
+                    print(f'-- Updates found from sub-model surrogates LS')
+                    # init random solution 
+                    current_solution = self._initializer()
+                    current_solution.data = obtained_solution_data
 
-                fitness_score = self._main_evaluator(current_solution)
+                    fitness_score = self._main_evaluator(current_solution)
 
-                # new computed solution score
-                current_solution._score = fitness_score
+                    # new computed solution score
+                    current_solution._score = fitness_score
 
-                # if solution is really better after real evaluation, then we replace
-                if self.isBetter(current_solution):
-                    self._bestSolution = current_solution
+                    # if solution is really better after real evaluation, then we replace
+                    if self.isBetter(current_solution):
+                        self._bestSolution = current_solution
 
-                print(f'-- Current solution obtained is {current_solution._score} vs. {self._bestSolution._score}')
-                self.progress()
+                    print(f'-- Current solution obtained is {current_solution._score} vs. {self._bestSolution._score}')
+                    self.progress()
     
-
 
             # check using specific dynamic criteria based on r^2
             r_squared_scores = self.surrogates_coefficient_of_determination()

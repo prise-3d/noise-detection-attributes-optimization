@@ -5,10 +5,10 @@ open_ml_problems_folder = 'OpenML_datasets'
 surrogate_data_path = 'data/surrogate/data/'
 
 # fixed test params as first part
-k_params = [100] # 100, 150, 200
+k_params = [30, 50, 100] # 100, 150, 200
 k_random = [0] # 0, 1
 k_reinit = [0] # 0, 1
-every_ls = 50
+every_ls = 5
 
 n_times = 5
 
@@ -62,7 +62,7 @@ def main():
                             output_problem_name = f'{ml_problem_name}_everyLS_{every_ls}_k{k}_random{k_r}_reinit{k_init}_{str_index}'
 
                             # copy pre-computed real evaluation data for this instance
-                            current_output_real_eval_path = os.path.join(surrogate_data_path, output_problem_name)
+                            # current_output_real_eval_path = os.path.join(surrogate_data_path, output_problem_name)
                             # shutil.copy2(real_evaluation_data_file_path, current_output_real_eval_path)
 
                             ml_surrogate_multi_command = f"python find_best_attributes_surrogate_openML_multi_specific.py " \
@@ -82,7 +82,7 @@ def main():
                         output_problem_name = f'{ml_problem_name}_everyLS_{every_ls}_k{k}_random{k_r}_reinit{k_init}'
 
                         # copy pre-computed real evaluation data for this instance
-                        current_output_real_eval_path = os.path.join(surrogate_data_path, output_problem_name)
+                        # current_output_real_eval_path = os.path.join(surrogate_data_path, output_problem_name)
                         # shutil.copy2(real_evaluation_data_file_path, current_output_real_eval_path)
 
                         ml_surrogate_multi_command = f"python find_best_attributes_surrogate_openML_multi_specific.py " \
@@ -96,7 +96,8 @@ def main():
                                         f"--output {output_problem_name}"
                                         
                         print(f'Running extraction data for {ml_problem_name} with [ils: {p_ils}, ls: {p_ls}, k: {k}, k_r: {k_r}]')
-                        os.system(ml_surrogate_multi_command)
+                        #os.system(ml_surrogate_multi_command)
+                        print(ml_surrogate_multi_command)
 
 
 
