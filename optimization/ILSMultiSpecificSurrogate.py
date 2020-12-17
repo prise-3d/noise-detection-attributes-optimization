@@ -455,16 +455,38 @@ class ILSMultiSpecificSurrogate(Algorithm):
                             self._population[i] = sub_problem_solution
 
                     self.add_to_surrogate(sub_problem_solution, i)
-
-            print(f'State of current population for surrogates ({len(self._population)} members)')
-            for i, s in enumerate(self._population):
-                print(f'Population[{i}]: best solution fitness is {s.fitness()}')
             
             # main best solution update
             if self._start_train_surrogates <= self.getGlobalEvaluation():
 
                 # need to create virtual solution from current population
                 obtained_solution_data = np.array([ s._data for s in self._population ], dtype='object').flatten().tolist()
+
+                if list(obtained_solution_data) == list(self._bestSolution._data):
+                    print(f'-- No updates found from sub-model surrogates LS (best solution score: {self._bestSolution._score}')
+                else:
+                    print(f'-- Updates found into population from sub-model surrogates LS')
+                    # init random solution 
+                    current_solution = self._initializer()
+                    current_solution.data = obtained_solution_data
+
+                    fitness_score = self._main_evaluator(current_solution)
+
+                    # new computed solution score
+                    current_solution._score = fitness_score
+
+                    # if solution is really better after real evaluation, then we replace
+                    if self.isBetter(current_solution):
+                        self._bestSolution = current_solution
+
+                    print(f'-- Current main solution from population is {current_solution._score} vs. {self._bestSolution._score}')
+                    self.progress()
+
+            # main best solution update
+            if self._start_train_surrogates <= self.getGlobalEvaluation():
+
+                # need to create virtual solution from current population
+                obtained_solution_data = np.array([ s._data for s in ls_solutions ], dtype='object').flatten().tolist()
 
                 if list(obtained_solution_data) == list(self._bestSolution._data):
                     print(f'-- No updates found from sub-model surrogates LS (best solution score: {self._bestSolution._score}')
@@ -481,11 +503,24 @@ class ILSMultiSpecificSurrogate(Algorithm):
 
                     # if solution is really better after real evaluation, then we replace
                     if self.isBetter(current_solution):
+
+                        print(f'Exploration solution obtained from LS surrogates enable improvment of main solution')
                         self._bestSolution = current_solution
 
-                    print(f'-- Current solution obtained is {current_solution._score} vs. {self._bestSolution._score}')
+                        print(f'Exploration solution obtained from LS surrogates enable improvment of main solution')
+                        # also update the whole population as restarting process if main solution is better
+                        for i, sub_problem_solution in enumerate(ls_solutions):
+
+                            # already evaluated sub solution
+                            self._population[i] = sub_problem_solution
+
+                    print(f'-- Current main solution obtained from `LS solutions` is {current_solution._score} vs. {self._bestSolution._score}')
+                    logging.info(f'-- Current main solution obtained from `LS solutions` is {current_solution._score} vs. {self._bestSolution._score}')
                     self.progress()
     
+            print(f'State of current population for surrogates ({len(self._population)} members)')
+            for i, s in enumerate(self._population):
+                print(f'Population[{i}]: best solution fitness is {s.fitness()}')
 
             # check using specific dynamic criteria based on r^2
             r_squared_scores = self.surrogates_coefficient_of_determination()
@@ -502,6 +537,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
             if training_surrogate_every <= 0:
                 training_surrogate_every = 1
                 
+            logging.info(f"=> R² of surrogate is of {r_squared} | MAE is of {mae_score} -- [Retraining model after {self._n_local_search % training_surrogate_every} of {training_surrogate_every} LS]")
             print(f"=> R² of surrogate is of {r_squared} | MAE is of {mae_score} -- [Retraining model after {self._n_local_search % training_surrogate_every} of {training_surrogate_every} LS]")
             
             # check if necessary or not to train again surrogate
