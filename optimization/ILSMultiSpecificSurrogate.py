@@ -99,6 +99,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
         self._k_random = k_random
         self._k_indices = None
         self._surrogates = None
+        self._population = None
 
         self._generate_only = generate_only
         self._solutions_folder = solutions_folder
@@ -193,10 +194,6 @@ class ILSMultiSpecificSurrogate(Algorithm):
         current_learn = df.sample(training_samples)
         current_test = df.drop(current_learn.index)
 
-        # TODO : (check) not necessary now to select specific features indices into set
-        # current_learn = learn.copy()
-        # current_test = test.copy()
-
         problem = ND3DProblem(size=len(indices)) # problem size based on best solution size (need to improve...)
         model = Lasso(alpha=1e-5)
         surrogate = WalshSurrogate(order=2, size=problem.size, model=model)
@@ -290,16 +287,9 @@ class ILSMultiSpecificSurrogate(Algorithm):
         """
 
         # for each indices set, get r^2 surrogate model and made prediction score
-
         num_cores = multiprocessing.cpu_count()
 
         r_squared_scores = Parallel(n_jobs=num_cores)(delayed(s_model.analysis.coefficient_of_determination)(s_model.surrogate) for s_model in self._surrogates)
-
-        # for i, _ in enumerate(self._k_indices):
-        #     r_squared = self._surrogates[i].analysis.coefficient_of_determination(self._surrogates[i].surrogate)
-        #     r_squared_scores.append(r_squared)
-
-        #print(r_squared_scores)
 
         return r_squared_scores
 
@@ -310,17 +300,11 @@ class ILSMultiSpecificSurrogate(Algorithm):
             mae_scores: [{float}] -- mae scores from model
         """
 
-        # for each indices set, get r^2 surrogate model and made prediction score
-
+        # for each indices set, get mae surrogate model and made prediction score
         num_cores = multiprocessing.cpu_count()
 
         mae_scores = Parallel(n_jobs=num_cores)(delayed(s_model.analysis.mae)(s_model.surrogate) for s_model in self._surrogates)
 
-        # for i, _ in enumerate(self._k_indices):
-        #     r_squared = self._surrogates[i].analysis.coefficient_of_determination(self._surrogates[i].surrogate)
-        #     r_squared_scores.append(r_squared)
-
-        #print(mae_scores)
 
         return mae_scores
 
@@ -361,11 +345,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
         # initialize current solution
         self.initRun()
 
-        # enable resuming for ILS
-        self.resume()
-
-        if self._k_indices is None:
-            self.init_k_split_indices()
+        self.init_k_split_indices()
 
         # add norm to indentify sub problem data
         self.init_solutions_files()
@@ -373,6 +353,9 @@ class ILSMultiSpecificSurrogate(Algorithm):
         # here we each surrogate sub evaluator
         self.define_sub_evaluators()
         self.init_population()
+
+        # enable resuming for ILS
+        self.resume()
 
         # count number of surrogate obtained and restart using real evaluations done for each surrogate (sub-model)
         if (self._start_train_surrogates * self._k_division) > self.getGlobalEvaluation():
@@ -463,20 +446,27 @@ class ILSMultiSpecificSurrogate(Algorithm):
 
                     sub_problem_solution._score = fitness_score
 
-                    # if solution is really better after real evaluation, then we replace
-                    if self.isBetter(self._population[i]):
-                        self._population[i] = sub_problem_solution
+                    # if solution is really better after real evaluation, then we replace (depending of problem nature (minimizing / maximizing))
+                    if self._maximise:
+                        if sub_problem_solution.fitness() > self._population[i].fitness():
+                            self._population[i] = sub_problem_solution
+                    else:
+                        if sub_problem_solution.fitness() < self._population[i].fitness():
+                            self._population[i] = sub_problem_solution
 
                     self.add_to_surrogate(sub_problem_solution, i)
 
+            print(f'State of current population for surrogates ({len(self._population)} members)')
+            for i, s in enumerate(self._population):
+                print(f'Population[{i}]: best solution fitness is {s.fitness()}')
             
             # main best solution update
             if self._start_train_surrogates <= self.getGlobalEvaluation():
 
                 # need to create virtual solution from current population
-                obtained_solution_data = np.array([ s._data for s in self._population ]).flatten().tolist()
+                obtained_solution_data = np.array([ s._data for s in self._population ], dtype='object').flatten().tolist()
 
-                if obtained_solution_data == self._bestSolution.data:
+                if list(obtained_solution_data) == list(self._bestSolution._data):
                     print(f'-- No updates found from sub-model surrogates LS (best solution score: {self._bestSolution._score}')
                 else:
                     print(f'-- Updates found from sub-model surrogates LS')

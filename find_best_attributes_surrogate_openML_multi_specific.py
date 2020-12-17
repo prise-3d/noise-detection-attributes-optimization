@@ -43,6 +43,7 @@ from macop.callbacks.BasicCheckpoint import BasicCheckpoint
 from macop.callbacks.UCBCheckpoint import UCBCheckpoint
 from optimization.callbacks.SurrogateCheckpoint import SurrogateCheckpoint
 from optimization.callbacks.MultiSurrogateCheckpoint import MultiSurrogateCheckpoint
+from optimization.callbacks.MultiSurrogateSpecificCheckpoint import MultiSurrogateSpecificCheckpoint
 
 from sklearn.ensemble import RandomForestClassifier
 
@@ -234,8 +235,9 @@ def main():
 
     backup_file_path = os.path.join(backup_model_folder, p_output + '.csv')
     ucb_backup_file_path = os.path.join(backup_model_folder, p_output + '_ucbPolicy.csv')
-    surrogate_backup_file_path = os.path.join(cfg.output_surrogates_data_folder, p_output + '_train.csv')
-    surrogate_k_indices_backup_file_path = os.path.join(cfg.output_surrogates_data_folder, p_output + '_k_indices.csv')
+    surrogate_backup_file_path = os.path.join(backup_model_folder, p_output + '_train.csv')
+    surrogate_k_indices_backup_file_path = os.path.join(backup_model_folder, p_output + '_k_indices.csv')
+    surrogate_population_backup_file_path = os.path.join(backup_model_folder, p_output + '_population.csv')
 
     # prepare optimization algorithm (only use of mutation as only ILS are used here, and local search need only local permutation)
     operators = [SimpleBinaryMutation(), SimpleMutation()]
@@ -273,6 +275,7 @@ def main():
     #algo.addCallback(UCBCheckpoint(every=1, filepath=ucb_backup_file_path))
     algo.addCallback(SurrogateCheckpoint(every=p_ls_iteration, filepath=surrogate_backup_file_path)) # try every LS like this
     algo.addCallback(MultiSurrogateCheckpoint(every=p_ls_iteration, filepath=surrogate_k_indices_backup_file_path)) # try every LS like this
+    algo.addCallback(MultiSurrogateSpecificCheckpoint(every=p_ls_iteration, filepath=surrogate_population_backup_file_path)) # try every LS like this
 
     bestSol = algo.run(p_ils_iteration, p_ls_iteration)
 
