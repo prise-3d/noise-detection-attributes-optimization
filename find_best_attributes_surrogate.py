@@ -141,8 +141,7 @@ def main():
 
     # init solution (`n` attributes)
     def init():
-        return BinarySolution([], p_length
-        ).random(validator)
+        return BinarySolution.random(p_length, validator)
 
 
     class SurrogateEvaluator(Evaluator):
