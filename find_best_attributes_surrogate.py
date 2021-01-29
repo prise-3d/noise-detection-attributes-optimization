@@ -91,13 +91,28 @@ def loadDataset(filename):
 
     return x_dataset_train, y_dataset_train, x_dataset_test, y_dataset_test
 
+def _get_best_model(X_train, y_train):
+
+    Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    gammas = [0.001, 0.01, 0.1, 5, 10, 100]
+    param_grid = {'kernel':['rbf'], 'C': Cs, 'gamma' : gammas}
+
+    svc = svm.SVC(probability=True, class_weight='balanced')
+    #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
+
+    clf.fit(X_train, y_train)
+
+    model = clf.best_estimator_
+
+    return model
+
 def main():
 
     parser = argparse.ArgumentParser(description="Train and find best filters to use for model")
 
     parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)', required=True)
-    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, default=models_list[0], required=False)
-    parser.add_argument('--start_surrogate', type=int, help='number of evalution before starting surrogare model', default=1000)
+    parser.add_argument('--start_surrogate', type=int, help='number of evalution before starting surrogare model', default=100)
     parser.add_argument('--length', type=int, help='max data length (need to be specify for evaluator)', required=True)
     parser.add_argument('--ils', type=int, help='number of total iteration for ils algorithm', required=True)
     parser.add_argument('--ls', type=int, help='number of iteration for Local Search algorithm', required=True)
@@ -106,7 +121,6 @@ def main():
     args = parser.parse_args()
 
     p_data_file = args.data
-    p_choice    = args.choice
     p_length    = args.length
     p_start     = args.start_surrogate
     p_ils_iteration = args.ils
@@ -146,11 +160,9 @@ def main():
         y_train_filters = y_train
         x_test_filters = x_test.iloc[:, indices]
         
-        # TODO : use of GPU implementation of SVM
-        # model = mdl.get_trained_model(p_choice, x_train_filters, y_train_filters)
-
-        model = RandomForestClassifier(n_estimators=10)
-        model = model.fit(x_train_filters, y_train_filters)
+        model = _get_best_model(x_train_filters, y_train_filters)
+        #model = RandomForestClassifier(n_estimators=10)
+        #model = model.fit(x_train_filters, y_train_filters)
         
         y_test_model = model.predict(x_test_filters)
         test_roc_auc = roc_auc_score(y_test, y_test_model)
@@ -217,6 +229,7 @@ def main():
     filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_attributes_result_filename)
 
     filters_counter = 0
+
     # count number of filters
     for index, item in enumerate(bestSol.data):
         if index != 0 and index % 2 == 1:
