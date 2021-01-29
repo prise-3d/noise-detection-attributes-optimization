@@ -173,10 +173,10 @@ class ILSSurrogate(Algorithm):
             # using randomly generated solutions (in order to cover seearch space)
             while self._start_train_surrogate > self.getGlobalEvaluation():
                 
-                newSolution = self._initializer()
+                newSolution = self.initializer()
 
                 # evaluate new solution
-                newSolution.evaluate(self._evaluator)
+                newSolution.evaluate(self.evaluator)
 
                 # add it to surrogate pool
                 self.add_to_surrogate(newSolution)
@@ -191,15 +191,15 @@ class ILSSurrogate(Algorithm):
         while not self.stop():
 
             # set current evaluator based on used or not of surrogate function
-            self._evaluator = self._surrogate_evaluator if self._start_train_surrogate <= self.getGlobalEvaluation() else self._main_evaluator
+            self.evaluator = self._surrogate_evaluator if self._start_train_surrogate <= self.getGlobalEvaluation() else self._main_evaluator
 
             # create new local search instance
             # passing global evaluation param from ILS
-            ls = LocalSearchSurrogate(self._initializer,
-                         self._evaluator,
+            ls = LocalSearchSurrogate(self.initializer,
+                         self.evaluator,
                          self._operators,
-                         self._policy,
-                         self._validator,
+                         self.policy,
+                         self.validator,
                          self._maximise,
                          parent=self)
 
@@ -224,7 +224,7 @@ class ILSSurrogate(Algorithm):
 
                 # if solution is really better after real evaluation, then we replace
                 if self.isBetter(newSolution):
-                    self._bestSolution = newSolution
+                    self.result = newSolution
 
                 self.add_to_surrogate(newSolution)
 
