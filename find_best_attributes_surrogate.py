@@ -27,19 +27,20 @@ import custom_config as cfg
 import models as mdl
 
 from optimization.ILSSurrogate import ILSSurrogate
-from macop.solutions.BinarySolution import BinarySolution
+from macop.solutions.discrete.BinarySolution import BinarySolution
+from macop.evaluators.base import Evaluator
 
-from macop.operators.mutators.SimpleMutation import SimpleMutation
-from macop.operators.mutators.SimpleBinaryMutation import SimpleBinaryMutation
-from macop.operators.crossovers.SimpleCrossover import SimpleCrossover
-from macop.operators.crossovers.RandomSplitCrossover import RandomSplitCrossover
+from macop.operators.discrete.mutators.SimpleMutation import SimpleMutation
+from macop.operators.discrete.mutators.SimpleBinaryMutation import SimpleBinaryMutation
+from macop.operators.discrete.crossovers.SimpleCrossover import SimpleCrossover
+from macop.operators.discrete.crossovers.RandomSplitCrossover import RandomSplitCrossover
 
-from macop.operators.policies.UCBPolicy import UCBPolicy
+from macop.operators.policies.reinforcement.UCBPolicy import UCBPolicy
 
-from macop.callbacks.BasicCheckpoint import BasicCheckpoint
-from macop.callbacks.UCBCheckpoint import UCBCheckpoint
+from macop.callbacks.classicals.BasicCheckpoint import BasicCheckpoint
+from macop.callbacks.policies.UCBCheckpoint import UCBCheckpoint
 
-from sklearn.ensemble import RandomForestClassifier
+#from sklearn.ensemble import RandomForestClassifier
 
 # variables and parameters
 models_list         = cfg.models_names_list
@@ -143,37 +144,40 @@ def main():
         return BinarySolution([], p_length
         ).random(validator)
 
-    # define evaluate function here (need of data information)
-    def evaluate(solution):
 
-        start = datetime.datetime.now()
+    class SurrogateEvaluator(Evaluator):
 
-        # get indices of filters data to use (filters selection from solution)
-        indices = []
+        # define evaluate function here (need of data information)
+        def compute(solution):
 
-        for index, value in enumerate(solution.data): 
-            if value == 1: 
-                indices.append(index) 
+            start = datetime.datetime.now()
 
-        # keep only selected filters from solution
-        x_train_filters = x_train.iloc[:, indices]
-        y_train_filters = y_train
-        x_test_filters = x_test.iloc[:, indices]
-        
-        model = _get_best_model(x_train_filters, y_train_filters)
-        #model = RandomForestClassifier(n_estimators=10)
-        #model = model.fit(x_train_filters, y_train_filters)
-        
-        y_test_model = model.predict(x_test_filters)
-        test_roc_auc = roc_auc_score(y_test, y_test_model)
+            # get indices of filters data to use (filters selection from solution)
+            indices = []
 
-        end = datetime.datetime.now()
+            for index, value in enumerate(solution.data): 
+                if value == 1: 
+                    indices.append(index) 
 
-        diff = end - start
+            # keep only selected filters from solution
+            x_train_filters = self.data['x_train'].iloc[:, indices]
+            y_train_filters = self.data['y_train']
+            x_test_filters = self.data['x_test'].iloc[:, indices]
+            
+            model = _get_best_model(x_train_filters, y_train_filters)
+            #model = RandomForestClassifier(n_estimators=10)
+            #model = model.fit(x_train_filters, y_train_filters)
+            
+            y_test_model = model.predict(x_test_filters)
+            test_roc_auc = roc_auc_score(self.data['y_test'], y_test_model)
 
-        print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
+            end = datetime.datetime.now()
 
-        return test_roc_auc
+            diff = end - start
+
+            print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
+
+            return test_roc_auc
 
 
     # build all output folder and files based on `output` name
@@ -194,7 +198,7 @@ def main():
     ucb_backup_file_path = os.path.join(backup_model_folder, p_output + '_ucbPolicy.csv')
 
     # prepare optimization algorithm (only use of mutation as only ILS are used here, and local search need only local permutation)
-    operators = [SimpleBinaryMutation(), SimpleMutation()]
+    operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
     policy = UCBPolicy(operators)
 
     # define first line if necessary
@@ -203,19 +207,19 @@ def main():
             f.write('x;y\n')
 
     # custom ILS for surrogate use
-    algo = ILSSurrogate(_initalizer=init, 
-                        _evaluator=evaluate, # same evaluator by defadefaultult, as we will use the surrogate function
-                        _operators=operators, 
-                        _policy=policy, 
-                        _validator=validator,
-                        _surrogate_file_path=surrogate_output_model,
-                        _start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
-                        _solutions_file=surrogate_output_data,
-                        _ls_train_surrogate=1,
-                        _maximise=True)
+    algo = ILSSurrogate(initalizer=init, 
+                        evaluator=SurrogateEvaluator(data={'x_train': x_train, 'y_train': y_train, 'x_test': x_test, 'y_test': y_test}), # same evaluator by default, as we will use the surrogate function
+                        operators=operators, 
+                        policy=policy, 
+                        validator=validator,
+                        surrogate_file_path=surrogate_output_model,
+                        start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
+                        solutions_file=surrogate_output_data,
+                        ls_train_surrogate=5,
+                        maximise=True)
     
-    algo.addCallback(BasicCheckpoint(_every=1, _filepath=backup_file_path))
-    algo.addCallback(UCBCheckpoint(_every=1, _filepath=ucb_backup_file_path))
+    algo.addCallback(BasicCheckpoint(every=1, filepath=backup_file_path))
+    algo.addCallback(UCBCheckpoint(every=1, filepath=ucb_backup_file_path))
 
     bestSol = algo.run(p_ils_iteration, p_ls_iteration)
 
