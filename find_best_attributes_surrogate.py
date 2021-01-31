@@ -27,18 +27,18 @@ import custom_config as cfg
 import models as mdl
 
 from optimization.ILSSurrogate import ILSSurrogate
-from macop.solutions.discrete.BinarySolution import BinarySolution
+from macop.solutions.discrete import BinarySolution
 from macop.evaluators.base import Evaluator
 
-from macop.operators.discrete.mutators.SimpleMutation import SimpleMutation
-from macop.operators.discrete.mutators.SimpleBinaryMutation import SimpleBinaryMutation
-from macop.operators.discrete.crossovers.SimpleCrossover import SimpleCrossover
-from macop.operators.discrete.crossovers.RandomSplitCrossover import RandomSplitCrossover
+from macop.operators.discrete.mutators import SimpleMutation
+from macop.operators.discrete.mutators import SimpleBinaryMutation
+from macop.operators.discrete.crossovers import SimpleCrossover
+from macop.operators.discrete.crossovers import RandomSplitCrossover
 
-from macop.operators.policies.reinforcement.UCBPolicy import UCBPolicy
+from macop.policies.reinforcement import UCBPolicy
 
-from macop.callbacks.classicals.BasicCheckpoint import BasicCheckpoint
-from macop.callbacks.policies.UCBCheckpoint import UCBCheckpoint
+from macop.callbacks.classicals import BasicCheckpoint
+from macop.callbacks.policies import UCBCheckpoint
 
 #from sklearn.ensemble import RandomForestClassifier
 
@@ -59,6 +59,8 @@ def loadDataset(filename):
     ########################
     # 1. Get and prepare data
     ########################
+    # scene_name; zone_id; image_index_end; label; data
+
     dataset_train = pd.read_csv(filename + '.train', header=None, sep=";")
     dataset_test = pd.read_csv(filename + '.test', header=None, sep=";")
 
@@ -67,12 +69,12 @@ def loadDataset(filename):
     dataset_test = shuffle(dataset_test)
 
     # get dataset with equal number of classes occurences
-    noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 1]
-    not_noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 0]
+    noisy_df_train = dataset_train[dataset_train.iloc[:, 3] == 1]
+    not_noisy_df_train = dataset_train[dataset_train.iloc[:, 3] == 0]
     #nb_noisy_train = len(noisy_df_train.index)
 
-    noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 1]
-    not_noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 0]
+    noisy_df_test = dataset_test[dataset_test.iloc[:, 3] == 1]
+    not_noisy_df_test = dataset_test[dataset_test.iloc[:, 3] == 0]
     #nb_noisy_test = len(noisy_df_test.index)
 
     # use of all data
@@ -84,11 +86,11 @@ def loadDataset(filename):
     final_df_test = shuffle(final_df_test)
 
     # use of the whole data set for training
-    x_dataset_train = final_df_train.iloc[:,1:]
-    x_dataset_test = final_df_test.iloc[:,1:]
+    x_dataset_train = final_df_train.iloc[:, 4:]
+    x_dataset_test = final_df_test.iloc[:, 4:]
 
-    y_dataset_train = final_df_train.iloc[:,0]
-    y_dataset_test = final_df_test.iloc[:,0]
+    y_dataset_train = final_df_train.iloc[:, 3]
+    y_dataset_test = final_df_test.iloc[:, 3]
 
     return x_dataset_train, y_dataset_train, x_dataset_test, y_dataset_test
 
@@ -202,7 +204,7 @@ def main():
 
     # define first line if necessary
     if not os.path.exists(surrogate_output_data):
-        with open(surrogate_output_data) as f:
+        with open(surrogate_output_data, 'w') as f:
             f.write('x;y\n')
 
     # custom ILS for surrogate use

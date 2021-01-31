@@ -8,7 +8,7 @@ import joblib
 import time
 
 # module imports
-from macop.algorithms.Algorithm import Algorithm
+from macop.algorithms.base import Algorithm
 from .LSSurrogate import LocalSearchSurrogate
 from .utils.SurrogateAnalysis import SurrogateAnalysis
 

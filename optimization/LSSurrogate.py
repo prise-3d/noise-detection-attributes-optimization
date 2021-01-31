@@ -5,7 +5,7 @@
 import logging
 
 # module imports
-from macop.algorithms.Algorithm import Algorithm
+from macop.algorithms.base import Algorithm
 
 
 class LocalSearchSurrogate(Algorithm):

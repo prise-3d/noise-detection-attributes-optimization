@@ -16,7 +16,7 @@ from joblib import Parallel, delayed
 import multiprocessing
 
 # module imports
-from macop.algorithms.Algorithm import Algorithm
+from macop.algorithms.base import Algorithm
 from .LSSurrogate import LocalSearchSurrogate
 from .utils.SurrogateAnalysis import SurrogateAnalysis
 
