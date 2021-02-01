@@ -42,9 +42,11 @@ class LocalSearchSurrogate(Algorithm):
 
         # initialize current solution
         # self.initRun()
-        print("Inside LS => ", self._currentSolution)
 
-        solutionSize = self._currentSolution._size
+        for callback in self._callbacks:
+            callback.load()
+
+        solutionSize = self._currentSolution.size
 
         # local search algorithm implementation
         while not self.stop():
@@ -61,7 +63,9 @@ class LocalSearchSurrogate(Algorithm):
                 # increase number of evaluations
                 self.increaseEvaluation()
 
-                self.progress()
+                # self.progress()
+                for callback in self._callbacks:
+                    callback.run()
 
                 logging.info(f"---- Current {newSolution} - SCORE {newSolution.fitness}")
 

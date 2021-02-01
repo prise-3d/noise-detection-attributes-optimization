@@ -34,7 +34,7 @@ from macop.operators.discrete.mutators import SimpleMutation
 from macop.operators.discrete.mutators import SimpleBinaryMutation
 from macop.operators.discrete.crossovers import SimpleCrossover
 from macop.operators.discrete.crossovers import RandomSplitCrossover
-from optimization.operators.SimplePopCrossover import SimplePopCrossover
+from optimization.operators.SimplePopCrossover import SimplePopCrossover, RandomPopCrossover
 
 from macop.policies.reinforcement import UCBPolicy
 
@@ -104,7 +104,7 @@ def _get_best_model(X_train, y_train):
 
     svc = svm.SVC(probability=True, class_weight='balanced')
     #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=4)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=0, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 
@@ -117,8 +117,11 @@ def main():
     parser = argparse.ArgumentParser(description="Train and find best filters to use for model")
 
     parser.add_argument('--data', type=str, help='dataset filename prefix (without .train and .test)', required=True)
-    parser.add_argument('--start_surrogate', type=int, help='number of evalution before starting surrogare model', default=100)
+    parser.add_argument('--start_surrogate', type=int, help='number of evalution before starting surrogare model', required=True)
+    parser.add_argument('--train_every', type=int, help='max number of evalution before retraining surrogare model', required=True)
     parser.add_argument('--length', type=int, help='max data length (need to be specify for evaluator)', required=True)
+    parser.add_argument('--pop', type=int, help='pop size', required=True)
+    parser.add_argument('--order', type=int, help='walsh order function', required=True)
     parser.add_argument('--ils', type=int, help='number of total iteration for ils algorithm', required=True)
     parser.add_argument('--ls', type=int, help='number of iteration for Local Search algorithm', required=True)
     parser.add_argument('--output', type=str, help='output surrogate model name')
@@ -127,7 +130,10 @@ def main():
 
     p_data_file = args.data
     p_length    = args.length
+    p_pop       = args.pop
+    p_order     = args.order
     p_start     = args.start_surrogate
+    p_retrain   = args.train_every
     p_ils_iteration = args.ils
     p_ls_iteration  = args.ls
     p_output = args.output
@@ -152,7 +158,6 @@ def main():
 
         # define evaluate function here (need of data information)
         def compute(self, solution):
-
             start = datetime.datetime.now()
 
             # get indices of filters data to use (filters selection from solution)
@@ -178,7 +183,7 @@ def main():
 
             diff = end - start
 
-            print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
+            #print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
 
             return test_roc_auc
 
@@ -201,8 +206,8 @@ def main():
     ucb_backup_file_path = os.path.join(backup_model_folder, p_output + '_ucbPolicy.csv')
 
     # prepare optimization algorithm (only use of mutation as only ILS are used here, and local search need only local permutation)
-    operators = [SimpleBinaryMutation(), SimpleMutation(), SimpleCrossover(), RandomSplitCrossover()]
-    policy = UCBPolicy(operators)
+    operators = [SimpleBinaryMutation(), SimpleMutation(), RandomPopCrossover(), SimplePopCrossover()]
+    policy = UCBPolicy(operators, C=100, exp_rate=0.1)
 
     # define first line if necessary
     if not os.path.exists(surrogate_output_data):
@@ -215,11 +220,13 @@ def main():
                         operators=operators, 
                         policy=policy, 
                         validator=validator,
-                        population_size=20,
+                        population_size=p_pop,
                         surrogate_file_path=surrogate_output_model,
                         start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
                         solutions_file=surrogate_output_data,
-                        ls_train_surrogate=5,
+                        walsh_order=p_order,
+                        inter_policy_ls_file=os.path.join(backup_model_folder, p_output + '_ls_ucbPolicy.csv'),
+                        ls_train_surrogate=p_retrain,
                         maximise=True)
     
     algo.addCallback(MultiPopCheckpoint(every=1, filepath=backup_file_path))

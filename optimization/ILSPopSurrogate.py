@@ -10,6 +10,10 @@ import time
 # module imports
 from macop.algorithms.base import Algorithm
 from macop.evaluators.base import Evaluator
+from macop.operators.base import KindOperator
+from macop.policies.reinforcement import UCBPolicy
+
+from macop.callbacks.policies import UCBCheckpoint
 
 from .LSSurrogate import LocalSearchSurrogate
 from .utils.SurrogateAnalysis import SurrogateAnalysisMono
@@ -23,7 +27,7 @@ from wsao.sao.algos.fitter import FitterAlgo
 from wsao.sao.utils.analysis import SamplerAnalysis, FitterAnalysis, OptimizerAnalysis
 
 
-class SurrogateEvaluator(Evaluator):
+class LSSurrogateEvaluator(Evaluator):
 
     # use of surrogate in order to evaluate solution
     def compute(self, solution):
@@ -62,6 +66,8 @@ class ILSPopSurrogate(Algorithm):
                  surrogate_file_path,
                  start_train_surrogate,
                  ls_train_surrogate,
+                 walsh_order,
+                 inter_policy_ls_file,
                  solutions_file,
                  maximise=True,
                  parent=None):
@@ -81,6 +87,9 @@ class ILSPopSurrogate(Algorithm):
 
         self._ls_train_surrogate = ls_train_surrogate
         self._solutions_file = solutions_file
+
+        self._walsh_order = walsh_order
+        self._inter_policy_ls_file = inter_policy_ls_file
 
         # default population values
         self.population_size = population_size
@@ -103,7 +112,7 @@ class ILSPopSurrogate(Algorithm):
 
         problem = ND3DProblem(size=len(self._bestSolution.data)) # problem size based on best solution size (need to improve...)
         model = Lasso(alpha=1e-5)
-        surrogate = WalshSurrogate(order=2, size=problem.size, model=model)
+        surrogate = WalshSurrogate(order=self._walsh_order, size=problem.size, model=model)
         analysis = FitterAnalysis(logfile="train_surrogate.log", problem=problem)
         algo = FitterAlgo(problem=problem, surrogate=surrogate, analysis=analysis, seed=problem.seed)
 
@@ -134,7 +143,7 @@ class ILSPopSurrogate(Algorithm):
         self._surrogate = joblib.load(self._surrogate_file_path)
 
         # update evaluator function
-        self._surrogate_evaluator = SurrogateEvaluator(data={'surrogate': self._surrogate})
+        self._surrogate_evaluator = LSSurrogateEvaluator(data={'surrogate': self._surrogate})
 
     def add_to_surrogate(self, solution):
 
@@ -158,9 +167,10 @@ class ILSPopSurrogate(Algorithm):
     def initRun(self):
 
         fitness_scores = []
-        print('Initialisation of population')
+        print('Initialisation of @population')
         for i in range(len(self.population)):
 
+            print(f'  - solution [{(i+1)}] of {len(self.population)}')
             if self.population[i] is None:
                 solution = self.initialiser()
                 solution.evaluate(self.evaluator)
@@ -168,9 +178,11 @@ class ILSPopSurrogate(Algorithm):
                 self.population[i] = solution
                 self.add_to_surrogate(solution)
 
+            self.increaseEvaluation()
+
             fitness_scores.append(self.population[i].fitness)
 
-        print('Best solution initialisation')
+        print('Best solution @initialisation')
         self._bestSolution = self.population[fitness_scores.index(max(fitness_scores))]
 
 
@@ -228,24 +240,30 @@ class ILSPopSurrogate(Algorithm):
         while not self.stop():
 
             # set current evaluator based on used or not of surrogate function
-            self.local_evaluator = self._surrogate_evaluator if self._start_train_surrogate <= self.getGlobalEvaluation() else self._main_evaluator
+            self.evaluator = self._surrogate_evaluator if self._start_train_surrogate <= self.getGlobalEvaluation() else self._main_evaluator
 
             for i in range(len(self.population)):
 
+                # pass only Mutators operators for local search
+                selected_operators = [ op for op in self._operators if op._kind == KindOperator.MUTATOR ]
+
+                ls_policy = UCBPolicy(selected_operators, C=100, exp_rate=0.1)
                 # create new local search instance
                 # passing global evaluation param from ILS
                 ls = LocalSearchSurrogate(self.initialiser,
-                            self.local_evaluator,
-                            self._operators,
-                            self.policy,
+                            self.evaluator,
+                            selected_operators,
+                            ls_policy,
                             self.validator,
                             self._maximise,
-                            parent=self)
+                            parent=None,
+                            verbose=False)
 
-                # create current new solution using policy
+                ls.addCallback(UCBCheckpoint(every=1, filepath=self._inter_policy_ls_file))
+
+                # create current new solution using policy and custom algorithm init
                 ls._currentSolution = self.policy.apply(self.population[i])
                 ls.result = ls._currentSolution
-                print("Inside pop => ", ls._currentSolution)
 
                 # add same callbacks
                 #for callback in self._callbacks:
@@ -270,12 +288,15 @@ class ILSPopSurrogate(Algorithm):
                     if self.isBetter(newSolution):
                         self.result = newSolution
 
+                    # update population
                     if self.population[i].fitness < newSolution.fitness:
                         self.population[i] = newSolution
 
                     self.add_to_surrogate(newSolution)
 
                     self.progress()
+
+                print(f'Best solution found so far: {self.result.fitness}')
 
                 # check using specific dynamic criteria based on r^2
                 r_squared = self._surrogate.analysis.coefficient_of_determination(self._surrogate.surrogate)
