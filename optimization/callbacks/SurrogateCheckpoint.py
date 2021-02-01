@@ -54,7 +54,7 @@ class SurrogateCheckpoint(Callback):
 
             line = str(currentEvaluation) + ';' + str(surrogate_analyser._n_local_search) + ';' + str(surrogate_analyser._every_ls) + ';' + str(surrogate_analyser._time) + ';' + r2_data + ';' + str(surrogate_analyser._r2) \
                 + ';' + mae_data + ';' + str(surrogate_analyser._mae) \
-                + ';' + solutionData + ';' + str(solution.fitness()) + ';\n'
+                + ';' + solutionData + ';' + str(solution.fitness) + ';\n'
 
             # check if file exists
             if not os.path.exists(self._filepath):

@@ -26,7 +26,7 @@ sys.path.insert(0, '') # trick to enable import of main folder module
 import custom_config as cfg
 import models as mdl
 
-from optimization.ILSSurrogate import ILSSurrogate
+from optimization.ILSPopSurrogate import ILSPopSurrogate
 from macop.solutions.discrete import BinarySolution
 from macop.evaluators.base import Evaluator
 
@@ -34,11 +34,13 @@ from macop.operators.discrete.mutators import SimpleMutation
 from macop.operators.discrete.mutators import SimpleBinaryMutation
 from macop.operators.discrete.crossovers import SimpleCrossover
 from macop.operators.discrete.crossovers import RandomSplitCrossover
+from optimization.operators.SimplePopCrossover import SimplePopCrossover
 
 from macop.policies.reinforcement import UCBPolicy
 
 from macop.callbacks.classicals import BasicCheckpoint
 from macop.callbacks.policies import UCBCheckpoint
+from optimization.callbacks.MultiPopCheckpoint import MultiPopCheckpoint
 
 #from sklearn.ensemble import RandomForestClassifier
 
@@ -102,7 +104,7 @@ def _get_best_model(X_train, y_train):
 
     svc = svm.SVC(probability=True, class_weight='balanced')
     #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=4)
 
     clf.fit(X_train, y_train)
 
@@ -146,10 +148,10 @@ def main():
         return BinarySolution.random(p_length, validator)
 
 
-    class SurrogateEvaluator(Evaluator):
+    class SVMEvaluator(Evaluator):
 
         # define evaluate function here (need of data information)
-        def compute(solution):
+        def compute(self, solution):
 
             start = datetime.datetime.now()
 
@@ -161,16 +163,16 @@ def main():
                     indices.append(index) 
 
             # keep only selected filters from solution
-            x_train_filters = self.data['x_train'].iloc[:, indices]
-            y_train_filters = self.data['y_train']
-            x_test_filters = self.data['x_test'].iloc[:, indices]
+            x_train_filters = self._data['x_train'].iloc[:, indices]
+            y_train_filters = self._data['y_train']
+            x_test_filters = self._data['x_test'].iloc[:, indices]
             
             model = _get_best_model(x_train_filters, y_train_filters)
             #model = RandomForestClassifier(n_estimators=10)
             #model = model.fit(x_train_filters, y_train_filters)
             
             y_test_model = model.predict(x_test_filters)
-            test_roc_auc = roc_auc_score(self.data['y_test'], y_test_model)
+            test_roc_auc = roc_auc_score(self._data['y_test'], y_test_model)
 
             end = datetime.datetime.now()
 
@@ -208,18 +210,19 @@ def main():
             f.write('x;y\n')
 
     # custom ILS for surrogate use
-    algo = ILSSurrogate(initalizer=init, 
-                        evaluator=SurrogateEvaluator(data={'x_train': x_train, 'y_train': y_train, 'x_test': x_test, 'y_test': y_test}), # same evaluator by default, as we will use the surrogate function
+    algo = ILSPopSurrogate(initalizer=init, 
+                        evaluator=SVMEvaluator(data={'x_train': x_train, 'y_train': y_train, 'x_test': x_test, 'y_test': y_test}), # same evaluator by default, as we will use the surrogate function
                         operators=operators, 
                         policy=policy, 
                         validator=validator,
+                        population_size=20,
                         surrogate_file_path=surrogate_output_model,
                         start_train_surrogate=p_start, # start learning and using surrogate after 1000 real evaluation
                         solutions_file=surrogate_output_data,
                         ls_train_surrogate=5,
                         maximise=True)
     
-    algo.addCallback(BasicCheckpoint(every=1, filepath=backup_file_path))
+    algo.addCallback(MultiPopCheckpoint(every=1, filepath=backup_file_path))
     algo.addCallback(UCBCheckpoint(every=1, filepath=ucb_backup_file_path))
 
     bestSol = algo.run(p_ils_iteration, p_ls_iteration)
@@ -244,7 +247,7 @@ def main():
                 filters_counter += 1
 
 
-    line_info = p_data_file + ';' + str(p_ils_iteration) + ';' + str(p_ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness())
+    line_info = p_data_file + ';' + str(p_ils_iteration) + ';' + str(p_ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness)
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     

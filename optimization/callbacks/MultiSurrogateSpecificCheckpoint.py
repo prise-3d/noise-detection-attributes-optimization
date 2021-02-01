@@ -40,7 +40,7 @@ class MultiSurrogateSpecificCheckpoint(Callback):
 
             line = ''
 
-            fitness_list = [ s.fitness() for s in population ]
+            fitness_list = [ s.fitness for s in population ]
             fitness_data = ' '.join(list(map(str, fitness_list)))
 
             for s in population:
@@ -82,7 +82,7 @@ class MultiSurrogateSpecificCheckpoint(Callback):
             print(macop_text(f' MultiSurrogateSpecificCheckpoint found from `{self._filepath}` file. Start running using previous `population` values'))
 
             for i, s in enumerate(self._algo._population):
-                print(f'Population[{i}]: best solution fitness is {s.fitness()}')
+                print(f'Population[{i}]: best solution fitness is {s.fitness}')
 
         else:
             print(macop_text('No backup found... Start running using new `population` values'))

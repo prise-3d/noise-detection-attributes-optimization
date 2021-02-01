@@ -448,10 +448,10 @@ class ILSMultiSpecificSurrogate(Algorithm):
 
                     # if solution is really better after real evaluation, then we replace (depending of problem nature (minimizing / maximizing))
                     if self._maximise:
-                        if sub_problem_solution.fitness() > self._population[i].fitness():
+                        if sub_problem_solution.fitness > self._population[i].fitness:
                             self._population[i] = sub_problem_solution
                     else:
-                        if sub_problem_solution.fitness() < self._population[i].fitness():
+                        if sub_problem_solution.fitness < self._population[i].fitness:
                             self._population[i] = sub_problem_solution
 
                     self.add_to_surrogate(sub_problem_solution, i)
@@ -520,7 +520,7 @@ class ILSMultiSpecificSurrogate(Algorithm):
     
             print(f'State of current population for surrogates ({len(self._population)} members)')
             for i, s in enumerate(self._population):
-                print(f'Population[{i}]: best solution fitness is {s.fitness()}')
+                print(f'Population[{i}]: best solution fitness is {s.fitness}')
 
             # check using specific dynamic criteria based on r^2
             r_squared_scores = self.surrogates_coefficient_of_determination()

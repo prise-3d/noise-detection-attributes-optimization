@@ -41,7 +41,8 @@ class LocalSearchSurrogate(Algorithm):
         #     self.bestSolution = self.parent.bestSolution
 
         # initialize current solution
-        self.initRun()
+        # self.initRun()
+        print("Inside LS => ", self._currentSolution)
 
         solutionSize = self._currentSolution._size
 
@@ -62,7 +63,7 @@ class LocalSearchSurrogate(Algorithm):
 
                 self.progress()
 
-                logging.info(f"---- Current {newSolution} - SCORE {newSolution.fitness()}")
+                logging.info(f"---- Current {newSolution} - SCORE {newSolution.fitness}")
 
                 # add to surrogate pool file if necessary (using ILS parent reference)
                 # if self.parent.start_train_surrogate >= self.getGlobalEvaluation():
