@@ -5,9 +5,10 @@
 import os
 import logging
 import joblib
+import time
 
 # module imports
-from macop.algorithms.Algorithm import Algorithm
+from macop.algorithms.base import Algorithm
 from .LSSurrogate import LocalSearchSurrogate
 
 from sklearn.linear_model import (LinearRegression, Lasso, Lars, LassoLars,
@@ -17,6 +18,7 @@ from wsao.sao.problems.nd3dproblem import ND3DProblem
 from wsao.sao.surrogates.walsh import WalshSurrogate
 from wsao.sao.algos.fitter import FitterAlgo
 from wsao.sao.utils.analysis import SamplerAnalysis, FitterAnalysis, OptimizerAnalysis
+
 
 class ILSSurrogate(Algorithm):
     """Iterated Local Search used to avoid local optima and increave EvE (Exploration vs Exploitation) compromise using surrogate
@@ -40,34 +42,36 @@ class ILSSurrogate(Algorithm):
         callbacks: {[Callback]} -- list of Callback class implementation to do some instructions every number of evaluations and `load` when initializing algorithm
     """
     def __init__(self,
-                 _initalizer,
-                 _evaluator,
-                 _operators,
-                 _policy,
-                 _validator,
-                 _surrogate_file_path,
-                 _start_train_surrogate,
-                 _ls_train_surrogate,
-                 _solutions_file,
-                 _maximise=True,
-                 _parent=None):
+                 initalizer,
+                 evaluator,
+                 operators,
+                 policy,
+                 validator,
+                 surrogate_file_path,
+                 start_train_surrogate,
+                 ls_train_surrogate,
+                 solutions_file,
+                 maximise=True,
+                 parent=None):
 
         # set real evaluator as default
-        super().__init__(_initalizer, _evaluator, _operators, _policy,
-                _validator, _maximise, _parent)
+        super().__init__(initalizer, evaluator, operators, policy,
+                validator, maximise, parent)
 
-        self.n_local_search = 0
+        self._n_local_search = 0
+        self._main_evaluator = evaluator
 
-        self.surrogate_file_path = _surrogate_file_path
-        self.start_train_surrogate = _start_train_surrogate
+        self._surrogate_file_path = surrogate_file_path
+        self._start_train_surrogate = start_train_surrogate
 
-        self.surrogate_evaluator = None
+        self._surrogate_evaluator = None
+        self._surrogate_analyser = None
 
-        self.ls_train_surrogate = _ls_train_surrogate
-        self.solutions_file = _solutions_file
+        self._ls_train_surrogate = ls_train_surrogate
+        self._solutions_file = solutions_file
 
     def train_surrogate(self):
-        """etrain if necessary the whole surrogate fitness approximation function
+        """Retrain if necessary the whole surrogate fitness approximation function
         """
         # Following https://gitlab.com/florianlprt/wsao, we re-train the model
         # ---------------------------------------------------------------------------
@@ -78,19 +82,26 @@ class ILSSurrogate(Algorithm):
         #        sample=1000,step=10 \
         #        analysis=fitter,logfile=out_fit.csv
 
-        problem = ND3DProblem(size=len(self.bestSolution.data)) # problem size based on best solution size (need to improve...)
+        problem = ND3DProblem(size=len(self._bestSolution._data)) # problem size based on best solution size (need to improve...)
         model = Lasso(alpha=1e-5)
-        surrogate = WalshSurrogate(order=3, size=problem.size, model=model)
+        surrogate = WalshSurrogate(order=2, size=problem.size, model=model)
         analysis = FitterAnalysis(logfile="train_surrogate.log", problem=problem)
-
         algo = FitterAlgo(problem=problem, surrogate=surrogate, analysis=analysis, seed=problem.seed)
 
-        print("Start fitting again the surrogate model")
-        for r in range(10):
-            print("Iteration n°{0}: for fitting surrogate".format(r))
-            algo.run(samplefile=self.solutions_file, sample=100, step=10)
+        # dynamic number of samples based on dataset real evaluations
+        nsamples = None
+        with open(self._solutions_file, 'r') as f:
+            nsamples = len(f.readlines()) - 1 # avoid header
 
-        joblib.dump(algo, self.surrogate_file_path)
+        training_samples = int(0.7 * nsamples) # 70% used for learning part at each iteration
+        
+        print("Start fitting again the surrogate model")
+        print(f'Using {training_samples} of {nsamples} samples for train dataset')
+        for r in range(10):
+            print(f"Iteration n°{r}: for fitting surrogate")
+            algo.run(samplefile=self._solutions_file, sample=training_samples, step=10)
+
+        joblib.dump(algo, self._surrogate_file_path)
 
 
     def load_surrogate(self):
@@ -98,47 +109,47 @@ class ILSSurrogate(Algorithm):
         """
 
         # need to first train surrogate if not exist
-        if not os.path.exists(self.surrogate_file_path):
+        if not os.path.exists(self._surrogate_file_path):
             self.train_surrogate()
 
-        self.surrogate = joblib.load(self.surrogate_file_path)
+        self._surrogate = joblib.load(self._surrogate_file_path)
 
         # update evaluator function
-        self.surrogate_evaluator = lambda s: self.surrogate.surrogate.predict([s.data])[0]
+        self._surrogate_evaluator = lambda s: self._surrogate.surrogate.predict([s._data])[0]
 
     def add_to_surrogate(self, solution):
 
         # save real evaluated solution into specific file for surrogate
-        with open(self.solutions_file, 'a') as f:
+        with open(self._solutions_file, 'a') as f:
 
             line = ""
 
-            for index, e in enumerate(solution.data):
+            for index, e in enumerate(solution._data):
 
                 line += str(e)
                 
-                if index < len(solution.data) - 1:
+                if index < len(solution._data) - 1:
                     line += ","
 
             line += ";"
-            line += str(solution.score)
+            line += str(solution._score)
 
             f.write(line + "\n")
 
-    def run(self, _evaluations, _ls_evaluations=100):
+    def run(self, evaluations, ls_evaluations=100):
         """
         Run the iterated local search algorithm using local search (EvE compromise)
 
         Args:
-            _evaluations: {int} -- number of global evaluations for ILS
-            _ls_evaluations: {int} -- number of Local search evaluations (default: 100)
+            evaluations: {int} -- number of global evaluations for ILS
+            ls_evaluations: {int} -- number of Local search evaluations (default: 100)
 
         Returns:
             {Solution} -- best solution found
         """
 
         # by default use of mother method to initialize variables
-        super().run(_evaluations)
+        super().run(evaluations)
 
         # initialize current solution
         self.initRun()
@@ -146,13 +157,22 @@ class ILSSurrogate(Algorithm):
         # enable resuming for ILS
         self.resume()
 
-        if self.start_train_surrogate > self.getGlobalEvaluation():
+        # count number of surrogate obtained and restart using real evaluations done
+        nsamples = None
+        with open(self._solutions_file, 'r') as f:
+            nsamples = len(f.readlines()) - 1 # avoid header
+
+        if self.getGlobalEvaluation() < nsamples:
+            print(f'Restart using {nsamples} of {self._start_train_surrogate} real evaluations obtained')
+            self._numberOfEvaluations = nsamples
+
+        if self._start_train_surrogate > self.getGlobalEvaluation():
         
             # get `self.start_train_surrogate` number of real evaluations and save it into surrogate dataset file
             # using randomly generated solutions (in order to cover seearch space)
-            while self.start_train_surrogate > self.getGlobalEvaluation():
+            while self._start_train_surrogate > self.getGlobalEvaluation():
                 
-                newSolution = self.initializer()
+                newSolution = self.initialiser()
 
                 # evaluate new solution
                 newSolution.evaluate(self.evaluator)
@@ -168,78 +188,90 @@ class ILSSurrogate(Algorithm):
 
         # local search algorithm implementation
         while not self.stop():
-            
+
             # set current evaluator based on used or not of surrogate function
-            current_evaluator = self.surrogate_evaluator if self.start_train_surrogate <= self.getGlobalEvaluation() else self.evaluator
+            self.evaluator = self._surrogate_evaluator if self._start_train_surrogate <= self.getGlobalEvaluation() else self._main_evaluator
 
             # create new local search instance
             # passing global evaluation param from ILS
-            ls = LocalSearchSurrogate(self.initializer,
-                         current_evaluator,
-                         self.operators,
+            ls = LocalSearchSurrogate(self.initialiser,
+                         self.evaluator,
+                         self._operators,
                          self.policy,
                          self.validator,
-                         self.maximise,
-                         _parent=self)
+                         self._maximise,
+                         parent=self)
 
             # add same callbacks
-            for callback in self.callbacks:
+            for callback in self._callbacks:
                 ls.addCallback(callback)
 
             # create and search solution from local search
-            newSolution = ls.run(_ls_evaluations)
+            newSolution = ls.run(ls_evaluations)
 
             # if better solution than currently, replace it (solution saved in training pool, only if surrogate process is in a second process step)
             # Update : always add new solution into surrogate pool, not only if solution is better
             #if self.isBetter(newSolution) and self.start_train_surrogate < self.getGlobalEvaluation():
-            if self.start_train_surrogate <= self.getGlobalEvaluation():
+            if self._start_train_surrogate <= self.getGlobalEvaluation():
 
                 # if better solution found from local search, retrained the found solution and test again
                 # without use of surrogate
-                fitness_score = self.evaluator(newSolution)
+                fitness_score = self._main_evaluator(newSolution)
                 # self.increaseEvaluation() # dot not add evaluation
 
                 newSolution.score = fitness_score
 
                 # if solution is really better after real evaluation, then we replace
                 if self.isBetter(newSolution):
-                    self.bestSolution = newSolution
+                    self.result = newSolution
 
                 self.add_to_surrogate(newSolution)
 
                 self.progress()
 
+            # check using specific dynamic criteria based on r^2
+            r_squared = self._surrogate.analysis.coefficient_of_determination(self._surrogate.surrogate)
+            training_surrogate_every = int(r_squared * self._ls_train_surrogate)
+            print(f"=> R^2 of surrogate is of {r_squared}. Retraining model every {training_surrogate_every} LS")
+
+            # avoid issue when lauching every each local search
+            if training_surrogate_every <= 0:
+                training_surrogate_every = 1
+
             # check if necessary or not to train again surrogate
-            if self.n_local_search % self.ls_train_surrogate == 0 and self.start_train_surrogate <= self.getGlobalEvaluation():
+            if self._n_local_search % training_surrogate_every == 0 and self._start_train_surrogate <= self.getGlobalEvaluation():
 
                 # train again surrogate on real evaluated solutions file
+                start_training = time.time()
                 self.train_surrogate()
+                training_time = time.time() - start_training
+
+                self._surrogate_analyser = SurrogateAnalysis(training_time, training_surrogate_every, r_squared, self.getGlobalMaxEvaluation(), self._n_local_search)
 
                 # reload new surrogate function
                 self.load_surrogate()
 
             # increase number of local search done
-            self.n_local_search += 1
+            self._n_local_search += 1
 
             self.information()
 
-        logging.info("End of %s, best solution found %s" %
-                     (type(self).__name__, self.bestSolution))
+        logging.info(f"End of {type(self).__name__}, best solution found {self._bestSolution}")
 
         self.end()
-        return self.bestSolution
+        return self._bestSolution
 
-    def addCallback(self, _callback):
+    def addCallback(self, callback):
         """Add new callback to algorithm specifying usefull parameters
 
         Args:
-            _callback: {Callback} -- specific Callback instance
+            callback: {Callback} -- specific Callback instance
         """
         # specify current main algorithm reference
-        if self.parent is not None:
-            _callback.setAlgo(self.parent)
+        if self.getParent() is not None:
+            callback.setAlgo(self.getParent())
         else:
-            _callback.setAlgo(self)
+            callback.setAlgo(self)
 
         # set as new
-        self.callbacks.append(_callback)
+        self._callbacks.append(callback)

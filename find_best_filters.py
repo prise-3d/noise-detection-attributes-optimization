@@ -161,7 +161,7 @@ def main():
 
     filename_path = os.path.join(cfg.results_information_folder, cfg.optimization_filters_result_filename)
 
-    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness())
+    line_info = p_data_file + ';' + str(ils_iteration) + ';' + str(ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(bestSol.fitness)
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     
