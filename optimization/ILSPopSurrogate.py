@@ -296,6 +296,8 @@ class ILSPopSurrogate(Algorithm):
 
                     self.progress()
 
+                self.increaseEvaluation()
+
                 print(f'Best solution found so far: {self.result.fitness}')
 
                 # check using specific dynamic criteria based on r^2
