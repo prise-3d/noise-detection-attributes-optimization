@@ -298,15 +298,16 @@ class ILSPopSurrogate(Algorithm):
                     
                 self.increaseEvaluation()
 
+                print(f'=================================================================')
                 print(f'Best solution found so far: {self.result.fitness}')
 
                 # check using specific dynamic criteria based on r^2
                 r_squared = self._surrogate.analysis.coefficient_of_determination(self._surrogate.surrogate)
                 mae = self._surrogate.analysis.mae(self._surrogate.surrogate)
                 training_surrogate_every = int(r_squared * self._ls_train_surrogate)
-                print(f"=> R^2 of surrogate is of {r_squared}. Retraining model every {training_surrogate_every} LS")
-                print(f"=> MAE of surrogate is of {mae}. Retraining model every {training_surrogate_every} LS")
-
+                print(f"=> R² of surrogate is of {r_squared}.")
+                print(f"=> MAE of surrogate is of {mae}.")
+                print(f'=> Retraining model every {training_surrogate_every} LS ({self._n_local_search} of {training_surrogate_every})')
                 # avoid issue when lauching every each local search
                 if training_surrogate_every <= 0:
                     training_surrogate_every = 1
