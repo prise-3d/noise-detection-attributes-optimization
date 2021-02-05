@@ -81,11 +81,11 @@ class SurrogateMonoCheckpoint(Callback):
                 # set k_indices into main algorithm
                 self._algo._total_n_local_search = n_local_search
 
-            print(macop_line())
-            print(macop_text(f'SurrogateMonoCheckpoint found from `{self._filepath}` file.'))
+            print(macop_line(self._algo))
+            print(macop_text(self._algo, f'SurrogateMonoCheckpoint found from `{self._filepath}` file.'))
 
         else:
-            print(macop_text('No backup found...'))
+            print(macop_text(self._algo, 'No backup found...'))
             logging.info("Can't load Surrogate backup... Backup filepath not valid in SurrogateCheckpoint")
 
-        print(macop_line())
+        print(macop_line(self._algo))
