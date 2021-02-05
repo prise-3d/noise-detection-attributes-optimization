@@ -7,8 +7,8 @@ import logging
 import numpy as np
 
 # module imports
-from macop.callbacks.Callback import Callback
-from macop.utils.color import macop_text, macop_line
+from macop.callbacks.base.Callback import Callback
+from macop.utils.progress import macop_text, macop_line
 
 
 class SurrogateMonoCheckpoint(Callback):
