@@ -41,7 +41,7 @@ from macop.policies.reinforcement import UCBPolicy
 from macop.callbacks.classicals import BasicCheckpoint
 from macop.callbacks.policies import UCBCheckpoint
 from optimization.callbacks.MultiPopCheckpoint import MultiPopCheckpoint
-
+from optimization.callbacks.SurrogateMonoCheckpoint import SurrogateMonoCheckpoint
 #from sklearn.ensemble import RandomForestClassifier
 
 # variables and parameters
@@ -204,6 +204,7 @@ def main():
 
     backup_file_path = os.path.join(backup_model_folder, p_output + '.csv')
     ucb_backup_file_path = os.path.join(backup_model_folder, p_output + '_ucbPolicy.csv')
+    surrogate_performanche_file_path = os.path.join(cfg.output_surrogates_data_folder, p_output + '_performance.csv')
 
     # prepare optimization algorithm (only use of mutation as only ILS are used here, and local search need only local permutation)
     operators = [SimpleBinaryMutation(), SimpleMutation(), RandomPopCrossover(), SimplePopCrossover()]
@@ -231,6 +232,7 @@ def main():
     
     algo.addCallback(MultiPopCheckpoint(every=1, filepath=backup_file_path))
     algo.addCallback(UCBCheckpoint(every=1, filepath=ucb_backup_file_path))
+    algo.addCallback(SurrogateMonoCheckpoint(every=1, filepath=surrogate_performanche_file_path))
 
     bestSol = algo.run(p_ils_iteration, p_ls_iteration)
 

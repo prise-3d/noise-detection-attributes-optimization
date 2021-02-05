@@ -295,7 +295,7 @@ class ILSPopSurrogate(Algorithm):
                     self.add_to_surrogate(newSolution)
 
                     self.progress()
-
+                    
                 self.increaseEvaluation()
 
                 print(f'Best solution found so far: {self.result.fitness}')
