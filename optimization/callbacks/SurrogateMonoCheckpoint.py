@@ -7,7 +7,7 @@ import logging
 import numpy as np
 
 # module imports
-from macop.callbacks.base.Callback import Callback
+from macop.callbacks.base import Callback
 from macop.utils.progress import macop_text, macop_line
 
 
