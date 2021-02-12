@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # default param
-ILS=1000
+ILS=10000
 LS=100
 SS=50
 LENGTH=32 # number of features
@@ -17,7 +17,7 @@ for POP in {20,60,100};
 do
     for ORDER in {2,3};
     do
-        for LS in {100,500,1000};
+        for LS in {1000,5000,10000};
         do
             output="rendering-attributes-POP_${POP}-LS_${LS}-SS_${SS}-SO_${ORDER}-SE_${TRAIN_EVERY}"
             echo "Run optim attributes using: ${output}"
