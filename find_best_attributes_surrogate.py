@@ -47,6 +47,12 @@ from optimization.callbacks.SurrogateMonoCheckpoint import SurrogateMonoCheckpoi
 # variables and parameters
 models_list         = cfg.models_names_list
 
+from warnings import simplefilter
+from sklearn.exceptions import ConvergenceWarning, DeprecationWarning, VisibleDeprecationWarning
+simplefilter("ignore", category=ConvergenceWarning)
+simplefilter("ignore", category=DeprecationWarning)
+simplefilter("ignore", category=VisibleDeprecationWarning)
+
 # default validator
 def validator(solution):
 
