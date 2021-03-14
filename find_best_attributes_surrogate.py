@@ -47,6 +47,9 @@ from optimization.callbacks.SurrogateMonoCheckpoint import SurrogateMonoCheckpoi
 # variables and parameters
 models_list         = cfg.models_names_list
 
+from warnings import simplefilter
+simplefilter("ignore")
+
 # default validator
 def validator(solution):
 
