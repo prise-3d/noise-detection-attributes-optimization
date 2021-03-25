@@ -127,7 +127,7 @@ class ILSPopSurrogate(Algorithm):
         if df.x.count() < max_samples:
             max_samples = df.x.count()
 
-        ntraining_samples = max_samples * 0.80
+        ntraining_samples = int(max_samples * 0.80)
         
         # extract reduced dataset if necessary
         reduced_df = df.tail(max_samples)
