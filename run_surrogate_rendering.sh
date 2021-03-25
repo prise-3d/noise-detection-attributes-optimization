@@ -15,13 +15,13 @@ DATASET="rnn/data/datasets/features-selection-rendering-scaled/features-selectio
 
 for POP in {20,60,100};
 do
-    for ORDER in {2,3};
+    for ORDER in {1,2,3};
     do
         for LS in {1000,5000,10000};
         do
             output="rendering-attributes-POP_${POP}-LS_${LS}-SS_${SS}-SO_${ORDER}-SE_${TRAIN_EVERY}"
             echo "Run optim attributes using: ${output}"
-            python find_best_attributes_surrogate.py --data ${DATASET} --start_surrogate ${SS} --length 30 --ils ${ILS} --ls ${LS} --pop ${POP} --order ${ORDER} --train_every ${TRAIN_EVERY}  --output ${output}
+            python find_best_attributes_surrogate.py --data ${DATASET} --start_surrogate ${SS} --length 32 --ils ${ILS} --ls ${LS} --pop ${POP} --order ${ORDER} --train_every ${TRAIN_EVERY}  --output ${output}
         done
     done
 done
