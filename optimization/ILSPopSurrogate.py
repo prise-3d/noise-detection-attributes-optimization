@@ -134,7 +134,7 @@ class ILSPopSurrogate(Algorithm):
         reduced_df = shuffle(reduced_df)
 
         # shuffle dataset
-        learn = reduced_df.iloc[0:ntraining_samples]
+        learn = reduced_df.tail(ntraining_samples)
         test = reduced_df.drop(learn.index)
 
         print("Start fitting again the surrogate model")
