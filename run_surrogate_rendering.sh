@@ -1,13 +1,13 @@
 #! /bin/bash
 
 # default param
-ILS=10000
+ILS=2000
 LS=100
 SS=50
 LENGTH=32 # number of features
 POP=100
 ORDER=2
-TRAIN_EVERY=50
+TRAIN_EVERY=10
 
 
 #output="rendering-attributes-ILS_${ILS}-POP_${POP}-LS_${LS}-SS_${SS}-SO_${ORDER}-SE_${TRAIN_EVERY}"
