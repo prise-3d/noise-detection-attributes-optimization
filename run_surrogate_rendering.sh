@@ -14,6 +14,7 @@ TRAIN_EVERY=10
 DATASET="rnn/data/datasets/features-selection-rendering-scaled/features-selection-rendering-scaled"
 
 for run in {1,2,3,4,5,6,7,8,9,10};
+do
     for POP in {20,60,100};
     do
         for ORDER in {1,2,3};
