@@ -6,6 +6,8 @@ import os
 import logging
 import joblib
 import time
+import pandas as pd
+from sklearn.utils import shuffle
 
 # module imports
 from macop.algorithms.base import Algorithm
@@ -77,6 +79,7 @@ class ILSPopSurrogate(Algorithm):
                 validator, maximise, parent)
 
         self._n_local_search = 0
+        self._ls_local_search = 0
         self._main_evaluator = evaluator
 
         self._surrogate_file_path = surrogate_file_path
@@ -116,18 +119,30 @@ class ILSPopSurrogate(Algorithm):
         analysis = FitterAnalysis(logfile="train_surrogate.log", problem=problem)
         algo = FitterAlgo(problem=problem, surrogate=surrogate, analysis=analysis, seed=problem.seed)
 
-        # dynamic number of samples based on dataset real evaluations
-        nsamples = None
-        with open(self._solutions_file, 'r') as f:
-            nsamples = len(f.readlines()) - 1 # avoid header
-
-        training_samples = int(0.7 * nsamples) # 70% used for learning part at each iteration
+        # data set
+        df = pd.read_csv(self._solutions_file, sep=';')
         
+        # learning set and test set based on max last 1000 samples
+        max_samples = 1000
+
+        if df.x.count() < max_samples:
+            max_samples = df.x.count()
+
+        ntraining_samples = int(max_samples * 0.80)
+        
+        # extract reduced dataset if necessary
+        reduced_df = df.tail(max_samples)
+        reduced_df = shuffle(reduced_df)
+
+        # shuffle dataset
+        learn = reduced_df.tail(ntraining_samples)
+        test = reduced_df.drop(learn.index)
+
         print("Start fitting again the surrogate model")
-        print(f'Using {training_samples} of {nsamples} samples for train dataset')
+        print(f'Using {ntraining_samples} samples of {max_samples} for train dataset')
         for r in range(10):
             print(f"Iteration n°{r}: for fitting surrogate")
-            algo.run(samplefile=self._solutions_file, sample=training_samples, step=10)
+            algo.run_samples(learn=learn, test=test, step=10)
 
         joblib.dump(algo, self._surrogate_file_path)
 
@@ -307,13 +322,18 @@ class ILSPopSurrogate(Algorithm):
                 training_surrogate_every = int(r_squared * self._ls_train_surrogate)
                 print(f"=> R² of surrogate is of {r_squared}.")
                 print(f"=> MAE of surrogate is of {mae}.")
-                print(f'=> Retraining model every {training_surrogate_every} LS ({self._n_local_search % training_surrogate_every} of {training_surrogate_every})')
+                print(f'=> Retraining model every {training_surrogate_every} LS ({self._ls_local_search % training_surrogate_every} of {training_surrogate_every})')
                 # avoid issue when lauching every each local search
                 if training_surrogate_every <= 0:
                     training_surrogate_every = 1
 
+
+                # increase number of local search done
+                self._n_local_search += 1
+                self._ls_local_search += 1
+
                 # check if necessary or not to train again surrogate
-                if self._n_local_search % training_surrogate_every == 0 and self._start_train_surrogate <= self.getGlobalEvaluation():
+                if self._ls_local_search % training_surrogate_every == 0 and self._start_train_surrogate <= self.getGlobalEvaluation():
 
                     # train again surrogate on real evaluated solutions file
                     start_training = time.time()
@@ -325,8 +345,8 @@ class ILSPopSurrogate(Algorithm):
                     # reload new surrogate function
                     self.load_surrogate()
 
-                # increase number of local search done
-                self._n_local_search += 1
+                    # reinit ls search
+                    self._ls_local_search = 0
 
                 self.information()
 
