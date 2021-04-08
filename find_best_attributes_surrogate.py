@@ -260,8 +260,21 @@ def main():
 
 
     line_info = p_output + ';' + p_data_file + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness)
-    with open(filename_path, 'a') as f:
-        f.write(line_info + '\n')
+
+    # check if results are already saved...
+    already_saved = False
+    with open(filename_path, 'r') as f:
+        lines = f.readlines()
+
+        for line in lines:
+            output_name = line.split(';')[0]
+            
+            if p_output == output_name:
+                already_saved = True
+
+    if not already_saved:
+        with open(filename_path, 'a') as f:
+            f.write(line_info + '\n')
     
     print('Result saved into %s' % filename_path)
 
