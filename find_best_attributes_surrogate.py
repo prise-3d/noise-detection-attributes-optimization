@@ -259,7 +259,7 @@ def main():
                 filters_counter += 1
 
 
-    line_info = p_data_file + ';' + str(p_ils_iteration) + ';' + str(p_ls_iteration) + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness)
+    line_info = p_output + ';' + p_data_file + ';' + str(bestSol.data) + ';' + str(list(bestSol.data).count(1)) + ';' + str(filters_counter) + ';' + str(bestSol.fitness)
     with open(filename_path, 'a') as f:
         f.write(line_info + '\n')
     
