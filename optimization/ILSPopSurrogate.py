@@ -322,10 +322,12 @@ class ILSPopSurrogate(Algorithm):
                 training_surrogate_every = int(r_squared * self._ls_train_surrogate)
                 print(f"=> R² of surrogate is of {r_squared}.")
                 print(f"=> MAE of surrogate is of {mae}.")
-                print(f'=> Retraining model every {training_surrogate_every} LS ({self._ls_local_search % training_surrogate_every} of {training_surrogate_every})')
+                
                 # avoid issue when lauching every each local search
                 if training_surrogate_every <= 0:
                     training_surrogate_every = 1
+
+                print(f'=> Retraining model every {training_surrogate_every} LS ({self._ls_local_search % training_surrogate_every} of {training_surrogate_every})')
 
 
                 # increase number of local search done
