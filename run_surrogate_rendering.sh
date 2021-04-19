@@ -5,7 +5,7 @@ ILS=1000
 LS=100
 SS=50
 LENGTH=32 # number of features
-POP=100
+POP=20
 ORDER=2
 TRAIN_EVERY=10
 
