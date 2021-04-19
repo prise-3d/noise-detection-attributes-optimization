@@ -175,9 +175,9 @@ def main():
             y_train_filters = self._data['y_train']
             x_test_filters = self._data['x_test'].iloc[:, indices]
             
-            # model = _get_best_model(x_train_filters, y_train_filters)
-            model = RandomForestClassifier(n_estimators=500, class_weight='balanced', bootstrap=True, max_samples=0.75, n_jobs=-1)
-            model = model.fit(x_train_filters, y_train_filters)
+            model = _get_best_model(x_train_filters, y_train_filters)
+            # model = RandomForestClassifier(n_estimators=500, class_weight='balanced', bootstrap=True, max_samples=0.75, n_jobs=-1)
+            # model = model.fit(x_train_filters, y_train_filters)
             
             y_test_model = model.predict(x_test_filters)
             test_roc_auc = roc_auc_score(self._data['y_test'], y_test_model)
