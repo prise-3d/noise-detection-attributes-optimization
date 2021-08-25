@@ -9,6 +9,7 @@ corr_indices
 metric_curves
 results
 .ipynb_checkpoints
+analysis/images
 
 # simulate_models.csv
 
