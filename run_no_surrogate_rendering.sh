@@ -25,7 +25,7 @@ do
             #do
                 output="no-rendering-attributes-POP_${POP}-LS_${LS}-RUN_${run}"
                 echo "Run optim attributes using: ${output}"
-                python find_best_attributes_no_surrogate.py --data ${DATASET} --start_surrogate ${SS} --length 32 --ils ${ILS} --ls ${LS} --pop ${POP} --order ${ORDER} --trai$
+                python find_best_attributes_no_surrogate.py --data ${DATASET} --start_surrogate ${SS} --length 32 --ils ${ILS} --ls ${LS} --pop ${POP} --order ${ORDER} --train_every ${TRAIN_EVERY}  --output ${output}
             #done
         #done
     # done
