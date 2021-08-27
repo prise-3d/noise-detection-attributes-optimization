@@ -67,7 +67,7 @@ class LocalSearchSurrogate(Algorithm):
                 for callback in self._callbacks:
                     callback.run()
 
-                self.add_to_surrogate(newSolution)
+                self._parent.add_to_surrogate(newSolution)
 
                 logging.info(f"---- Current {newSolution} - SCORE {newSolution.fitness}")
 
