@@ -317,39 +317,39 @@ class ILSPopSurrogate(Algorithm):
                 print(f'=================================================================')
                 print(f'Best solution found so far: {self.result.fitness}')
 
-                # check using specific dynamic criteria based on r^2
-                r_squared = self._surrogate.analysis.coefficient_of_determination(self._surrogate.surrogate)
-                mae = self._surrogate.analysis.mae(self._surrogate.surrogate)
-                training_surrogate_every = int(r_squared * self._ls_train_surrogate)
-                print(f"=> R² of surrogate is of {r_squared}.")
-                print(f"=> MAE of surrogate is of {mae}.")
+                # # check using specific dynamic criteria based on r^2
+                # r_squared = self._surrogate.analysis.coefficient_of_determination(self._surrogate.surrogate)
+                # mae = self._surrogate.analysis.mae(self._surrogate.surrogate)
+                # training_surrogate_every = int(r_squared * self._ls_train_surrogate)
+                # print(f"=> R² of surrogate is of {r_squared}.")
+                # print(f"=> MAE of surrogate is of {mae}.")
                 
-                # avoid issue when lauching every each local search
-                if training_surrogate_every <= 0:
-                    training_surrogate_every = 1
+                # # avoid issue when lauching every each local search
+                # if training_surrogate_every <= 0:
+                #     training_surrogate_every = 1
 
-                print(f'=> Retraining model every {training_surrogate_every} LS ({self._ls_local_search % training_surrogate_every} of {training_surrogate_every})')
+                # print(f'=> Retraining model every {training_surrogate_every} LS ({self._ls_local_search % training_surrogate_every} of {training_surrogate_every})')
 
 
                 # increase number of local search done
                 self._n_local_search += 1
-                self._ls_local_search += 1
+                # self._ls_local_search += 1
 
-                # check if necessary or not to train again surrogate
-                if self._ls_local_search % training_surrogate_every == 0 and self._start_train_surrogate <= self.getGlobalEvaluation():
+                # # check if necessary or not to train again surrogate
+                # if self._ls_local_search % training_surrogate_every == 0 and self._start_train_surrogate <= self.getGlobalEvaluation():
 
-                    # train again surrogate on real evaluated solutions file
-                    start_training = time.time()
-                    self.train_surrogate()
-                    training_time = time.time() - start_training
+                #     # train again surrogate on real evaluated solutions file
+                #     start_training = time.time()
+                #     self.train_surrogate()
+                #     training_time = time.time() - start_training
 
-                    self._surrogate_analyser = SurrogateAnalysisMono(training_time, training_surrogate_every, r_squared, mae, self.getGlobalMaxEvaluation(), self._n_local_search)
+                #     self._surrogate_analyser = SurrogateAnalysisMono(training_time, training_surrogate_every, r_squared, mae, self.getGlobalMaxEvaluation(), self._n_local_search)
 
-                    # reload new surrogate function
-                    self.load_surrogate()
+                #     # reload new surrogate function
+                #     self.load_surrogate()
 
-                    # reinit ls search
-                    self._ls_local_search = 0
+                #     # reinit ls search
+                #     self._ls_local_search = 0
 
                 self.information()
 
