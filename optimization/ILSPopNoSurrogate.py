@@ -271,7 +271,7 @@ class ILSPopSurrogate(Algorithm):
                             ls_policy,
                             self.validator,
                             self._maximise,
-                            parent=None,
+                            parent=self,
                             verbose=False)
 
                 ls.addCallback(UCBCheckpoint(every=1, filepath=self._inter_policy_ls_file))
