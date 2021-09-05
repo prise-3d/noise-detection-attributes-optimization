@@ -31,7 +31,7 @@ def _get_best_model(X_train, y_train):
 
     svc = svm.SVC(probability=True, class_weight='balanced')
     #clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, scoring=my_accuracy_scorer, n_jobs=-1)
-    clf = GridSearchCV(svc, param_grid, cv=3, verbose=1, n_jobs=-1)
+    clf = GridSearchCV(svc, param_grid, cv=5, verbose=1, n_jobs=-1)
 
     clf.fit(X_train, y_train)
 
