@@ -28,6 +28,45 @@ models_list         = cfg.models_names_list
 current_dirpath     = os.getcwd()
 output_model_folder = os.path.join(current_dirpath, saved_models_folder)
 
+def loadDataset(filename):
+
+    ########################
+    # 1. Get and prepare data
+    ########################
+    # scene_name; zone_id; image_index_end; label; data
+
+    dataset_train = pd.read_csv(filename + '.train', header=None, sep=";")
+    dataset_test = pd.read_csv(filename + '.test', header=None, sep=";")
+
+    # default first shuffle of data
+    dataset_train = shuffle(dataset_train)
+    dataset_test = shuffle(dataset_test)
+
+    # get dataset with equal number of classes occurences
+    noisy_df_train = dataset_train[dataset_train.iloc[:, 3] == 1]
+    not_noisy_df_train = dataset_train[dataset_train.iloc[:, 3] == 0]
+    #nb_noisy_train = len(noisy_df_train.index)
+
+    noisy_df_test = dataset_test[dataset_test.iloc[:, 3] == 1]
+    not_noisy_df_test = dataset_test[dataset_test.iloc[:, 3] == 0]
+    #nb_noisy_test = len(noisy_df_test.index)
+
+    # use of all data
+    final_df_train = pd.concat([not_noisy_df_train, noisy_df_train])
+    final_df_test = pd.concat([not_noisy_df_test, noisy_df_test])
+
+    # shuffle data another time
+    final_df_train = shuffle(final_df_train)
+    final_df_test = shuffle(final_df_test)
+
+    # use of the whole data set for training
+    x_dataset_train = final_df_train.iloc[:, 4:]
+    x_dataset_test = final_df_test.iloc[:, 4:]
+
+    y_dataset_train = final_df_train.iloc[:, 3]
+    y_dataset_test = final_df_test.iloc[:, 3]
+
+    return x_dataset_train, y_dataset_train, x_dataset_test, y_dataset_test
 
 def main():
 
@@ -51,38 +90,7 @@ def main():
     ########################
     # 1. Get and prepare data
     ########################
-    dataset_train = pd.read_csv(p_data_file + '.train', header=None, sep=";")
-    dataset_test = pd.read_csv(p_data_file + '.test', header=None, sep=";")
-
-    # default first shuffle of data
-    dataset_train = shuffle(dataset_train)
-    dataset_test = shuffle(dataset_test)
-
-    # get dataset with equal number of classes occurences
-    noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 1]
-    not_noisy_df_train = dataset_train[dataset_train.iloc[:, 0] == 0]
-    nb_noisy_train = len(noisy_df_train.index)
-
-    noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 1]
-    not_noisy_df_test = dataset_test[dataset_test.iloc[:, 0] == 0]
-    nb_noisy_test = len(noisy_df_test.index)
-
-    final_df_train = pd.concat([not_noisy_df_train, noisy_df_train])
-    final_df_test = pd.concat([not_noisy_df_test, noisy_df_test])
-
-    # shuffle data another time
-    final_df_train = shuffle(final_df_train)
-    final_df_test = shuffle(final_df_test)
-
-    final_df_train_size = len(final_df_train.index)
-    final_df_test_size = len(final_df_test.index)
-
-    # use of the whole data set for training
-    x_dataset_train = final_df_train.iloc[:,1:]
-    x_dataset_test = final_df_test.iloc[:,1:]
-
-    y_dataset_train = final_df_train.iloc[:,0]
-    y_dataset_test = final_df_test.iloc[:,0]
+    x_dataset_train, y_dataset_train, x_dataset_test, y_dataset_test = loadDataset(p_data_file)
 
     # get indices of filters data to use (filters selection from solution)
     indices = []
@@ -102,7 +110,6 @@ def main():
     #######################
 
     print("-------------------------------------------")
-    print("Train dataset size: ", final_df_train_size)
     model = mdl.get_trained_model(p_choice, x_dataset_train, y_dataset_train)
 
     #######################
