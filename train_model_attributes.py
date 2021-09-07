@@ -114,7 +114,6 @@ def main():
 
     print()
 
-    return
     #######################
     # 2. Construction of the model : Ensemble model structure
     #######################
