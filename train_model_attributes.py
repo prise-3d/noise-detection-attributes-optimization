@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 import joblib
 import sklearn.svm as svm
 from sklearn.utils import shuffle
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import cross_val_score
 
 # modules and config imports
@@ -28,7 +28,7 @@ models_list         = cfg.models_names_list
 current_dirpath     = os.getcwd()
 output_model_folder = os.path.join(current_dirpath, saved_models_folder)
 
-def loadDataset(filename):
+def loadDataset(filename, n_step):
 
     ########################
     # 1. Get and prepare data
@@ -41,6 +41,9 @@ def loadDataset(filename):
     # default first shuffle of data
     dataset_train = shuffle(dataset_train)
     dataset_test = shuffle(dataset_test)
+
+    dataset_train = dataset_train[dataset_train.iloc[:, 2] % n_step == 0]
+    dataset_test = dataset_test[dataset_test.iloc[:, 2] % n_step == 0]
 
     # get dataset with equal number of classes occurences
     noisy_df_train = dataset_train[dataset_train.iloc[:, 3] == 1]
@@ -72,15 +75,17 @@ def main():
 
     parser = argparse.ArgumentParser(description="Train SKLearn model and save it into .joblib file")
 
-    parser.add_argument('--data', type=str, help='dataset filename prefiloc (without .train and .test)')
-    parser.add_argument('--output', type=str, help='output file name desired for model (without .joblib extension)')
-    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list)
+    parser.add_argument('--data', type=str, help='dataset filename prefiloc (without .train and .test)', required=True)
+    parser.add_argument('--output', type=str, help='output file name desired for model (without .joblib extension)', required=True)
+    parser.add_argument('--choice', type=str, help='model choice from list of choices', choices=models_list, required=True)
+    parser.add_argument('--step', type=int, help='step number of samples expected', default=20)
     parser.add_argument('--solution', type=str, help='Data of solution to specify filters to use')
 
     args = parser.parse_args()
 
     p_data_file = args.data
     p_output    = args.output
+    p_step      = args.step
     p_choice    = args.choice
     p_solution  = list(map(int, args.solution.split(' ')))
 
@@ -90,7 +95,7 @@ def main():
     ########################
     # 1. Get and prepare data
     ########################
-    x_dataset_train, y_dataset_train, x_dataset_test, y_dataset_test = loadDataset(p_data_file)
+    x_dataset_train, y_dataset_train, x_dataset_test, y_dataset_test = loadDataset(p_data_file, p_step)
 
     # get indices of filters data to use (filters selection from solution)
     indices = []
@@ -100,11 +105,16 @@ def main():
         if value == 1: 
             indices.append(index) 
 
-    print(indices)
+    print(f'Selected indices are: {indices}')
+    print(f"Train dataset size {len(x_dataset_train)}")
+    print(f"Test dataset size {len(x_dataset_test)}")
 
     x_dataset_train = x_dataset_train.iloc[:, indices]
     x_dataset_test =  x_dataset_test.iloc[:, indices]
 
+    print()
+
+    return
     #######################
     # 2. Construction of the model : Ensemble model structure
     #######################
@@ -119,40 +129,28 @@ def main():
     print("Accuracy: %0.2f (+/- %0.2f)" % (val_scores.mean(), val_scores.std() * 2))
 
     ######################
-    # 4. Test : Validation and test dataset from .test dataset
+    # 4. Metrics
     ######################
 
-    # we need to specify validation size to 20% of whole dataset
-    val_set_size = int(final_df_train_size/3)
-    test_set_size = val_set_size
+    y_train_model = model.predict(x_dataset_train)
+    y_test_model = model.predict(x_dataset_test)
 
-    total_validation_size = val_set_size + test_set_size
+    train_accuracy = accuracy_score(y_dataset_train, y_train_model)
+    test_accuracy = accuracy_score(y_dataset_test, y_test_model)
 
-    if final_df_test_size > total_validation_size:
-        x_dataset_test = x_dataset_test[0:total_validation_size]
-        y_dataset_test = y_dataset_test[0:total_validation_size]
-
-    X_test, X_val, y_test, y_val = train_test_split(x_dataset_test, y_dataset_test, test_size=0.5, random_state=1)
-
-    y_test_model = model.predict(X_test)
-    y_val_model = model.predict(X_val)
-
-    val_accuracy = accuracy_score(y_val, y_val_model)
-    test_accuracy = accuracy_score(y_test, y_test_model)
-
-    val_f1 = f1_score(y_val, y_val_model)
-    test_f1 = f1_score(y_test, y_test_model)
+    train_auc = roc_auc_score(y_dataset_train, y_train_model)
+    test_auc = roc_auc_score(y_dataset_test, y_test_model)
 
     ###################
     # 5. Output : Print and write all information in csv
     ###################
 
-    print("Validation dataset size ", val_set_size)
-    print("Validation: ", val_accuracy)
-    print("Validation F1: ", val_f1)
-    print("Test dataset size ", test_set_size)
-    print("Test: ", val_accuracy)
-    print("Test F1: ", test_f1)
+    print("Train dataset size ", len(x_dataset_train))
+    print("Train acc: ", train_accuracy)
+    print("Train AUC: ", train_auc)
+    print("Test dataset size ", len(x_dataset_test))
+    print("Test acc: ", test_accuracy)
+    print("Test AUC: ", test_auc)
 
     ##################
     # 6. Save model : create path if not exists
