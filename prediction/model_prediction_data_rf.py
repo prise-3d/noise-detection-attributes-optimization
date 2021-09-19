@@ -198,7 +198,8 @@ def main():
         # prepare input data
         # ToDo check data input
         
-        input_data = np.array([ l.replace('\n', '').split(' ') for l in data[4:] ], 'float32').flatten()
+        input_data = [ l.replace('\n', '').split(' ') for l in data[4:] ]
+        input_data = np.array([x for i, x in enumerate(input_data) if p_solution[i] == 1 ], 'float32').flatten()
         # print(input_data.flatten())
         input_data = np.expand_dims(input_data, axis=0)
                 
