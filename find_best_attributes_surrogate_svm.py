@@ -54,7 +54,7 @@ simplefilter("ignore")
 def validator(solution):
 
     # at least 5 attributes and at most 16
-    if list(solution.data).count(1) < 5 and list(solution.data).count(1) > 16:
+    if list(solution.data).count(1) < 5 or list(solution.data).count(1) > 16:
         return False
 
     return True
