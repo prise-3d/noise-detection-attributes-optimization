@@ -192,7 +192,7 @@ def main():
             diff = end - start
 
             print('----')
-            print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
+            print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc * (1 - math.pow(test_roc_auc - train_roc_auc, 2))))
 
             return test_roc_auc * (1 - math.pow(test_roc_auc - train_roc_auc, 2))
 
