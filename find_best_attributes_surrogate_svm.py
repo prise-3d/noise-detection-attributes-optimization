@@ -182,19 +182,20 @@ def main():
             # model = model.fit(x_train_filters, y_train_filters)
             
             y_test_model = model.predict(x_test_filters)
-            y_train_model = model.predict(x_train_filters)
+            # y_train_model = model.predict(x_train_filters)
 
             test_roc_auc = roc_auc_score(self._data['y_test'], y_test_model)
-            train_roc_auc = roc_auc_score(y_train_filters, y_train_model)
+            # train_roc_auc = roc_auc_score(y_train_filters, y_train_model)
 
             end = datetime.datetime.now()
 
             diff = end - start
 
             print('----')
-            print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc * (1 - math.pow(test_roc_auc - train_roc_auc, 2))))
+            print("Real evaluation took: {}, score found: {}".format(divmod(diff.days * 86400 + diff.seconds, 60), test_roc_auc))
 
-            return test_roc_auc * (1 - math.pow(test_roc_auc - train_roc_auc, 2))
+            # return test_roc_auc * (1 - math.pow(test_roc_auc - train_roc_auc, 2))
+            return test_roc_auc
 
 
     # build all output folder and files based on `output` name
